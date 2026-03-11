@@ -8,6 +8,7 @@ import { TunerOverlay } from './features/tuner-overlay';
 import { PluginPickerOverlay } from './features/plugin-picker';
 import { bridge } from './bridge';
 import { setupMockBridge } from './bridge/mock';
+import { setLanguage as setI18nLanguage } from './i18n';
 import {
   setAppState,
   updateAudioState,
@@ -15,8 +16,6 @@ import {
   updateMeters,
   updatePluginList,
   updateChain,
-  setLanguageState,
-  setThemeState,
   setScanningState,
   setError,
   theme as themeSignal,
@@ -72,6 +71,7 @@ export function App() {
   const handleBootstrapState = (payload: unknown) => {
     const state = payload as AppState;
     setAppState(state);
+    setI18nLanguage(state.language);
     applyTheme(state.theme);
   };
 

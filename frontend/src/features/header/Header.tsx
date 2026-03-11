@@ -1,4 +1,4 @@
-import { useTranslation } from '../../i18n';
+import { setLanguage as setI18nLanguage, useTranslation } from '../../i18n';
 import { bpm, language, theme } from '../../state';
 import { bridge } from '../../bridge';
 import { Button } from '../../components';
@@ -22,6 +22,7 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
 
   const handleLanguageChange = (lang: Language) => {
     language.value = lang;
+    setI18nLanguage(lang);
     bridge.emit('setLanguage', { languageCode: lang });
   };
 
