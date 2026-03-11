@@ -21,17 +21,17 @@ find_package(WebView2 REQUIRED)
 
 find_program(NPM_EXECUTABLE npm REQUIRED)
 
-set(KASANE_WEB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/web")
-set(KASANE_WEB_DIST_DIR "${KASANE_WEB_SOURCE_DIR}/dist")
+set(KASANE_FRONTEND_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
+set(KASANE_FRONTEND_DIST_DIR "${KASANE_FRONTEND_SOURCE_DIR}/dist")
 
-add_custom_target(kasane_web_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_WEB_SOURCE_DIR}" cmd /c npm ci
-    COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_WEB_SOURCE_DIR}" cmd /c npm run build
+add_custom_target(kasane_frontend_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_FRONTEND_SOURCE_DIR}" cmd /c npm ci
+    COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_FRONTEND_SOURCE_DIR}" cmd /c npm run build
     BYPRODUCTS
-        "${KASANE_WEB_DIST_DIR}/index.html"
-        "${KASANE_WEB_DIST_DIR}/assets"
+        "${KASANE_FRONTEND_DIST_DIR}/index.html"
+        "${KASANE_FRONTEND_DIST_DIR}/assets"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    COMMENT "Building Kasane Web UI"
+    COMMENT "Building Kasane frontend UI"
 )
 
 juce_add_gui_app(KasaneApp
@@ -81,15 +81,15 @@ if (MSVC)
     target_link_options(KasaneApp PRIVATE "/MAP")
 endif()
 
-add_dependencies(KasaneApp kasane_web_assets)
+add_dependencies(KasaneApp kasane_frontend_assets)
 
 juce_generate_juce_header(KasaneApp)
 
 add_custom_command(
     TARGET KasaneApp
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:KasaneApp>/web"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:KasaneApp>/frontend"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${KASANE_WEB_DIST_DIR}"
-            "$<TARGET_FILE_DIR:KasaneApp>/web"
+            "${KASANE_FRONTEND_DIST_DIR}"
+            "$<TARGET_FILE_DIR:KasaneApp>/frontend"
 )

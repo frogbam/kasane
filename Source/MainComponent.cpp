@@ -280,7 +280,7 @@ juce::String MainComponent::getStartupErrorMessage() const
     const auto options = const_cast<MainComponent*>(this)->createBrowserOptions();
 
     if (!webRoot.isDirectory())
-        return "Kasane web assets were not found. Build the Vite frontend before launching the app.";
+        return "Kasane frontend assets were not found. Build the Vite frontend before launching the app.";
 
     if (!juce::WebBrowserComponent::areOptionsSupported(options))
         return "The WebView2 backend is unavailable. Rebuild with WebView2 support enabled.";
@@ -291,14 +291,14 @@ juce::String MainComponent::getStartupErrorMessage() const
 juce::File MainComponent::findWebRoot() const
 {
     const auto executableFolder = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory();
-    const auto bundledWebRoot = executableFolder.getChildFile("web");
+    const auto bundledWebRoot = executableFolder.getChildFile("frontend");
 
     if (bundledWebRoot.isDirectory())
         return bundledWebRoot;
 
    #ifdef KASANE_SOURCE_DIR
     const juce::File sourceRoot { juce::String { KASANE_SOURCE_DIR }.unquoted() };
-    const auto distRoot = sourceRoot.getChildFile("web").getChildFile("dist");
+    const auto distRoot = sourceRoot.getChildFile("frontend").getChildFile("dist");
 
     if (distRoot.isDirectory())
         return distRoot;

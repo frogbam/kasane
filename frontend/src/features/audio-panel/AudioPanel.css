@@ -1,0 +1,32 @@
+.audio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.audio-panel__device-name {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--bg-inset);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.audio-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.audio-panel__meters {
+  display: flex;
+  flex-direction: column;
+}
+
+.audio-panel__divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: var(--space-sm) 0;
+}

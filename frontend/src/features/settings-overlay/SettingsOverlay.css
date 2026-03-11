@@ -1,0 +1,29 @@
+.settings-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.settings-overlay__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-overlay__row {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.settings-overlay__field {
+  flex: 1;
+}
+
+.settings-overlay__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-md);
+}

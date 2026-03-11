@@ -1,0 +1,40 @@
+@import './tokens.css';
+@import './reset.css';
+
+:root {
+  --header-height: 56px;
+  --footer-height: 120px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  min-width: 1024px;
+  min-height: 640px;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .app-layout {
+    min-width: 100%;
+  }
+  
+  .main-content {
+    overflow-y: auto;
+  }
+}

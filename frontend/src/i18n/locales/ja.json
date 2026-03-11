@@ -1,0 +1,67 @@
+{
+  "app": {
+    "title": "Kasane"
+  },
+  "header": {
+    "settings": "設定",
+    "tuner": "チューナー",
+    "scanPlugins": "プラグインスキャン",
+    "scanning": "スキャン中...",
+    "language": "言語",
+    "theme": "テーマ",
+    "darkTheme": "ダーク",
+    "lightTheme": "ライト"
+  },
+  "audio": {
+    "inputDevice": "入力デバイス",
+    "outputDevice": "出力デバイス",
+    "inputGain": "入力ゲイン",
+    "outputGain": "出力ゲイン",
+    "inputMeter": "入力メーター",
+    "outputMeter": "出力メーター",
+    "decibel": "dB"
+  },
+  "plugins": {
+    "availablePlugins": "利用可能なプラグイン",
+    "chain": "シグナルチェーン",
+    "add": "追加",
+    "remove": "削除",
+    "bypass": "バイパス",
+    "enable": "有効",
+    "edit": "編集",
+    "moveUp": "上へ移動",
+    "moveDown": "下へ移動",
+    "emptyChain": "チェーンにプラグインがありません。上のリストから追加してください。",
+    "noPlugins": "利用可能なプラグインがありません。プラグインをスキャンしてください。",
+    "manufacturer": "メーカー",
+    "category": "カテゴリ"
+  },
+  "settings": {
+    "title": "オーディオ設定",
+    "inputDevice": "入力デバイス",
+    "outputDevice": "出力デバイス",
+    "sampleRate": "サンプルレート",
+    "bufferSize": "バッファサイズ",
+    "apply": "適用",
+    "cancel": "キャンセル",
+    "hz": "Hz",
+    "samples": "サンプル"
+  },
+  "tuner": {
+    "title": "チューナー",
+    "note": "音",
+    "frequency": "周波数",
+    "cents": "セント",
+    "signalLevel": "信号レベル",
+    "flat": "低い",
+    "sharp": "高い",
+    "inTune": "正確",
+    "hz": "Hz"
+  },
+  "common": {
+    "close": "閉じる",
+    "save": "保存",
+    "error": "エラー",
+    "success": "成功"
+  }
+}

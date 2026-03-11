@@ -1,0 +1,67 @@
+{
+  "app": {
+    "title": "Kasane"
+  },
+  "header": {
+    "settings": "Settings",
+    "tuner": "Tuner",
+    "scanPlugins": "Scan Plugins",
+    "scanning": "Scanning...",
+    "language": "Language",
+    "theme": "Theme",
+    "darkTheme": "Dark",
+    "lightTheme": "Light"
+  },
+  "audio": {
+    "inputDevice": "Input Device",
+    "outputDevice": "Output Device",
+    "inputGain": "Input Gain",
+    "outputGain": "Output Gain",
+    "inputMeter": "Input Meter",
+    "outputMeter": "Output Meter",
+    "decibel": "dB"
+  },
+  "plugins": {
+    "availablePlugins": "Available Plugins",
+    "chain": "Signal Chain",
+    "add": "Add",
+    "remove": "Remove",
+    "bypass": "Bypass",
+    "enable": "Enable",
+    "edit": "Edit",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "emptyChain": "No plugins in chain. Add plugins from the list above.",
+    "noPlugins": "No plugins available. Try scanning for plugins.",
+    "manufacturer": "Manufacturer",
+    "category": "Category"
+  },
+  "settings": {
+    "title": "Audio Settings",
+    "inputDevice": "Input Device",
+    "outputDevice": "Output Device",
+    "sampleRate": "Sample Rate",
+    "bufferSize": "Buffer Size",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "hz": "Hz",
+    "samples": "samples"
+  },
+  "tuner": {
+    "title": "Tuner",
+    "note": "Note",
+    "frequency": "Frequency",
+    "cents": "Cents",
+    "signalLevel": "Signal Level",
+    "flat": "Flat",
+    "sharp": "Sharp",
+    "inTune": "In Tune",
+    "hz": "Hz"
+  },
+  "common": {
+    "close": "Close",
+    "save": "Save",
+    "error": "Error",
+    "success": "Success"
+  }
+}

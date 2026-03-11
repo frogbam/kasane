@@ -1,0 +1,89 @@
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background-color: var(--bg-inset);
+  border-radius: var(--radius-md);
+}
+
+.meter__label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.meter__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.meter__channel {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.meter__scale {
+  flex: 1;
+  background-color: var(--meter-track);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1px;
+  padding: 2px;
+  overflow: hidden;
+  height: 120px;
+}
+
+.meter__segment {
+  flex: 1;
+  background-color: var(--bg-inset);
+  border-radius: 1px;
+  transition: background-color 0.05s ease-out;
+  min-height: 3px;
+}
+
+.meter__segment--active {
+  background-color: var(--segment-color, var(--meter-green));
+  box-shadow: 0 0 4px var(--segment-color, var(--meter-green));
+}
+
+.meter__readings {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.meter__value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+}
+
+.meter__unit {
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+}
+
+@keyframes meter-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.meter__segment--active {
+  animation: meter-pulse 2s ease-in-out infinite;
+}

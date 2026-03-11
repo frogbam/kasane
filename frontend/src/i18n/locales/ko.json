@@ -1,0 +1,67 @@
+{
+  "app": {
+    "title": "Kasane"
+  },
+  "header": {
+    "settings": "설정",
+    "tuner": "튜너",
+    "scanPlugins": "플러그인 스캔",
+    "scanning": "스캔 중...",
+    "language": "언어",
+    "theme": "테마",
+    "darkTheme": "다크",
+    "lightTheme": "라이트"
+  },
+  "audio": {
+    "inputDevice": "입력 장치",
+    "outputDevice": "출력 장치",
+    "inputGain": "입력 게인",
+    "outputGain": "출력 게인",
+    "inputMeter": "입력 미터",
+    "outputMeter": "출력 미터",
+    "decibel": "dB"
+  },
+  "plugins": {
+    "availablePlugins": "사용 가능한 플러그인",
+    "chain": "시그널 체인",
+    "add": "추가",
+    "remove": "제거",
+    "bypass": "바이패스",
+    "enable": "활성화",
+    "edit": "편집",
+    "moveUp": "위로 이동",
+    "moveDown": "아래로 이동",
+    "emptyChain": "체인에 플러그인이 없습니다. 위 목록에서 추가하세요.",
+    "noPlugins": "사용 가능한 플러그인이 없습니다. 플러그인 스캔을 실행하세요.",
+    "manufacturer": "제조사",
+    "category": "카테고리"
+  },
+  "settings": {
+    "title": "오디오 설정",
+    "inputDevice": "입력 장치",
+    "outputDevice": "출력 장치",
+    "sampleRate": "샘플 레이트",
+    "bufferSize": "버퍼 크기",
+    "apply": "적용",
+    "cancel": "취소",
+    "hz": "Hz",
+    "samples": "샘플"
+  },
+  "tuner": {
+    "title": "튜너",
+    "note": "음",
+    "frequency": "주파수",
+    "cents": "센트",
+    "signalLevel": "신호 레벨",
+    "flat": "낮음",
+    "sharp": "높음",
+    "inTune": "정확",
+    "hz": "Hz"
+  },
+  "common": {
+    "close": "닫기",
+    "save": "저장",
+    "error": "오류",
+    "success": "성공"
+  }
+}

@@ -79,7 +79,7 @@ build/KasaneApp_artefacts/Release/Kasane.exe
 ## Repository Layout
 
 - `Source/` native JUCE app, audio host engine, and bridge logic
-- `web/` frontend source, localization files, and Vite build config
+- `frontend/` frontend source, localization files, and Vite build config
 - `docs/` design notes and UI planning documents
 
 ## Roadmap

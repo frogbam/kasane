@@ -1,0 +1,67 @@
+{
+  "app": {
+    "title": "Kasane"
+  },
+  "header": {
+    "settings": "设置",
+    "tuner": "调音器",
+    "scanPlugins": "扫描插件",
+    "scanning": "扫描中...",
+    "language": "语言",
+    "theme": "主题",
+    "darkTheme": "深色",
+    "lightTheme": "浅色"
+  },
+  "audio": {
+    "inputDevice": "输入设备",
+    "outputDevice": "输出设备",
+    "inputGain": "输入增益",
+    "outputGain": "输出增益",
+    "inputMeter": "输入电平表",
+    "outputMeter": "输出电平表",
+    "decibel": "dB"
+  },
+  "plugins": {
+    "availablePlugins": "可用插件",
+    "chain": "信号链",
+    "add": "添加",
+    "remove": "移除",
+    "bypass": "旁路",
+    "enable": "启用",
+    "edit": "编辑",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "emptyChain": "信号链中没有插件。请从上方列表添加。",
+    "noPlugins": "没有可用的插件。请扫描插件。",
+    "manufacturer": "制造商",
+    "category": "类别"
+  },
+  "settings": {
+    "title": "音频设置",
+    "inputDevice": "输入设备",
+    "outputDevice": "输出设备",
+    "sampleRate": "采样率",
+    "bufferSize": "缓冲区大小",
+    "apply": "应用",
+    "cancel": "取消",
+    "hz": "Hz",
+    "samples": "样本"
+  },
+  "tuner": {
+    "title": "调音器",
+    "note": "音符",
+    "frequency": "频率",
+    "cents": "音分",
+    "signalLevel": "信号电平",
+    "flat": "偏低",
+    "sharp": "偏高",
+    "inTune": "准确",
+    "hz": "Hz"
+  },
+  "common": {
+    "close": "关闭",
+    "save": "保存",
+    "error": "错误",
+    "success": "成功"
+  }
+}
