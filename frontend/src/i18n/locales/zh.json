@@ -32,7 +32,7 @@
     "edit": "编辑",
     "moveUp": "上移",
     "moveDown": "下移",
-    "emptyChain": "信号链中没有插件。",
+    "emptyChain": "点击添加按钮添加插件。",
     "noPlugins": "没有可用的插件。请扫描插件。",
     "manufacturer": "制造商",
     "category": "类别"

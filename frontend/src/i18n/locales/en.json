@@ -32,7 +32,7 @@
     "edit": "Edit",
     "moveUp": "Move Up",
     "moveDown": "Move Down",
-    "emptyChain": "No plugins in chain.",
+    "emptyChain": "Press Add button to add a plugin.",
     "noPlugins": "No plugins available. Try scanning for plugins.",
     "manufacturer": "Manufacturer",
     "category": "Category"
