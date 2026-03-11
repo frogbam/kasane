@@ -10,12 +10,18 @@ namespace
 constexpr auto settingsLanguageKey = "ui.language";
 constexpr auto settingsThemeKey = "ui.theme";
 constexpr auto settingsPluginListKey = "plugins.knownListXml";
+constexpr auto settingsPluginChainKey = "plugins.chainStateXml";
 constexpr auto settingsAudioStateKey = "audio.deviceStateXml";
 constexpr auto settingsInputGainKey = "audio.inputGainDb";
 constexpr auto settingsOutputGainKey = "audio.outputGainDb";
 constexpr auto settingsLeftMonitorChannelKey = "audio.leftMonitorChannel";
 constexpr auto settingsRightMonitorChannelKey = "audio.rightMonitorChannel";
 constexpr auto settingsBpmKey = "transport.bpm";
+constexpr auto pluginChainRootTag = "PLUGIN_CHAIN";
+constexpr auto pluginChainEntryTag = "PLUGIN";
+constexpr auto pluginChainIdentifierAttribute = "identifier";
+constexpr auto pluginChainEnabledAttribute = "enabled";
+constexpr auto pluginChainStateAttribute = "state";
 
 constexpr float minimumDb = -100.0f;
 
@@ -417,6 +423,13 @@ struct AudioHostEngine::HostedPlugin
     bool isEnabled = true;
 };
 
+struct AudioHostEngine::PersistedPluginState
+{
+    juce::String identifier;
+    juce::String stateBase64;
+    bool isEnabled = true;
+};
+
 class AudioHostEngine::PluginEditorWindow final : public juce::DocumentWindow
 {
 public:
@@ -460,12 +473,16 @@ private:
 AudioHostEngine::AudioHostEngine(juce::ApplicationProperties& properties)
     : appProperties(properties)
 {
+    suspendStatePersistence = true;
     initialisePluginFormats();
     restoreState();
     transportPlayHead.setBpm(bpm);
     initialiseAudioDeviceManager();
     createBaseGraphNodes();
     graph.setPlayHead(&transportPlayHead);
+    restoreHostedPluginsFromState();
+    suspendStatePersistence = false;
+    persistState();
     deviceManager.addAudioCallback(this);
     refreshDeviceLists();
 }
@@ -1230,6 +1247,66 @@ void AudioHostEngine::rebuildGraphConnections()
     persistState();
 }
 
+void AudioHostEngine::restoreHostedPluginsFromState()
+{
+    if (persistedPluginChain.empty())
+        return;
+
+    auto restoredCount = 0;
+    auto skippedCount = 0;
+
+    for (const auto& persistedPlugin : persistedPluginChain)
+    {
+        const auto description = knownPluginList.getTypeForIdentifierString(persistedPlugin.identifier);
+
+        if (description == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        juce::String errorMessage;
+        auto instance = pluginFormatManager.createPluginInstance(*description, currentSampleRate, currentBlockSize, errorMessage);
+
+        if (instance == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        instance->enableAllBuses();
+
+        if (persistedPlugin.stateBase64.isNotEmpty())
+        {
+            juce::MemoryBlock stateData;
+
+            if (stateData.fromBase64Encoding(persistedPlugin.stateBase64))
+                instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
+        }
+
+        auto node = graph.addNode(std::move(instance), std::nullopt, juce::AudioProcessorGraph::UpdateKind::none);
+
+        if (node == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        hostedPlugins.push_back({ juce::Uuid().toString(), *description, node, persistedPlugin.isEnabled });
+        ++restoredCount;
+    }
+
+    persistedPluginChain.clear();
+    rebuildGraphConnections();
+
+    if (restoredCount > 0 && skippedCount == 0)
+        statusMessage = "Plug-in chain restored.";
+    else if (restoredCount > 0)
+        statusMessage = "Plug-in chain restored with some unavailable plug-ins skipped.";
+    else if (skippedCount > 0)
+        statusMessage = "Saved plug-ins were unavailable and could not be restored.";
+}
+
 void AudioHostEngine::refreshDeviceLists()
 {
     auto& deviceTypes = deviceManager.getAvailableDeviceTypes();
@@ -1312,6 +1389,9 @@ void AudioHostEngine::refreshMonitorChannelSelection()
 
 void AudioHostEngine::persistState() const
 {
+    if (suspendStatePersistence)
+        return;
+
     auto* settings = appProperties.getUserSettings();
     settings->setValue(settingsLanguageKey, language);
     settings->setValue(settingsThemeKey, theme);
@@ -1323,6 +1403,25 @@ void AudioHostEngine::persistState() const
 
     if (auto xml = knownPluginList.createXml())
         settings->setValue(settingsPluginListKey, xml->toString());
+
+    juce::XmlElement chainXml(pluginChainRootTag);
+
+    for (const auto& plugin : hostedPlugins)
+    {
+        auto pluginXml = std::make_unique<juce::XmlElement>(pluginChainEntryTag);
+        pluginXml->setAttribute(pluginChainIdentifierAttribute, plugin.description.createIdentifierString());
+        pluginXml->setAttribute(pluginChainEnabledAttribute, plugin.isEnabled);
+
+        juce::MemoryBlock stateData;
+        plugin.node->getProcessor()->getStateInformation(stateData);
+
+        if (stateData.getSize() > 0)
+            pluginXml->setAttribute(pluginChainStateAttribute, stateData.toBase64Encoding());
+
+        chainXml.addChildElement(pluginXml.release());
+    }
+
+    settings->setValue(settingsPluginChainKey, chainXml.toString());
 
     if (auto xml = deviceManager.createStateXml())
         settings->setValue(settingsAudioStateKey, xml->toString());
@@ -1340,10 +1439,39 @@ void AudioHostEngine::restoreState()
     outputGainDb = static_cast<float>(settings->getDoubleValue(settingsOutputGainKey, 0.0));
     leftMonitorChannelIndex.store(settings->getIntValue(settingsLeftMonitorChannelKey, 0), std::memory_order_relaxed);
     rightMonitorChannelIndex.store(settings->getIntValue(settingsRightMonitorChannelKey, 1), std::memory_order_relaxed);
+    persistedPluginChain.clear();
 
     if (const auto xmlString = settings->getValue(settingsPluginListKey); xmlString.isNotEmpty())
         if (auto xml = juce::parseXML(xmlString))
             knownPluginList.recreateFromXml(*xml);
+
+    if (const auto chainXmlString = settings->getValue(settingsPluginChainKey); chainXmlString.isNotEmpty())
+    {
+        if (auto chainXml = juce::parseXML(chainXmlString))
+        {
+            if (chainXml->hasTagName(pluginChainRootTag))
+            {
+                for (auto* pluginXml = chainXml->getFirstChildElement();
+                     pluginXml != nullptr;
+                     pluginXml = pluginXml->getNextElement())
+                {
+                    if (! pluginXml->hasTagName(pluginChainEntryTag))
+                        continue;
+
+                    const auto identifier = pluginXml->getStringAttribute(pluginChainIdentifierAttribute);
+
+                    if (identifier.isEmpty())
+                        continue;
+
+                    persistedPluginChain.push_back({
+                        identifier,
+                        pluginXml->getStringAttribute(pluginChainStateAttribute),
+                        pluginXml->getBoolAttribute(pluginChainEnabledAttribute, true)
+                    });
+                }
+            }
+        }
+    }
 }
 
 void AudioHostEngine::clearEditors()

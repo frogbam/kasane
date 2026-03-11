@@ -111,12 +111,14 @@ private:
     void audioDeviceError(const juce::String& errorMessage) override;
 
     struct HostedPlugin;
+    struct PersistedPluginState;
     class PluginEditorWindow;
 
     void initialisePluginFormats();
     void initialiseAudioDeviceManager();
     void createBaseGraphNodes();
     void rebuildGraphConnections();
+    void restoreHostedPluginsFromState();
     void refreshDeviceLists();
     void updateDeviceOptionsForType(const juce::String& deviceType);
     void refreshMonitorChannelSelection();
@@ -164,7 +166,9 @@ private:
     juce::AudioProcessorGraph::Node::Ptr outputAnalysisNode;
 
     std::vector<HostedPlugin> hostedPlugins;
+    std::vector<PersistedPluginState> persistedPluginChain;
     std::map<juce::String, std::unique_ptr<PluginEditorWindow>> editorWindows;
+    bool suspendStatePersistence = false;
 
     std::atomic<float> inputLeftDb { -100.0f };
     std::atomic<float> inputRightDb { -100.0f };
