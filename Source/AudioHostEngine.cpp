@@ -15,6 +15,7 @@ constexpr auto settingsInputGainKey = "audio.inputGainDb";
 constexpr auto settingsOutputGainKey = "audio.outputGainDb";
 constexpr auto settingsLeftMonitorChannelKey = "audio.leftMonitorChannel";
 constexpr auto settingsRightMonitorChannelKey = "audio.rightMonitorChannel";
+constexpr auto settingsBpmKey = "transport.bpm";
 
 constexpr float minimumDb = -100.0f;
 
@@ -461,8 +462,10 @@ AudioHostEngine::AudioHostEngine(juce::ApplicationProperties& properties)
 {
     initialisePluginFormats();
     restoreState();
+    transportPlayHead.setBpm(bpm);
     initialiseAudioDeviceManager();
     createBaseGraphNodes();
+    graph.setPlayHead(&transportPlayHead);
     deviceManager.addAudioCallback(this);
     refreshDeviceLists();
 }
@@ -480,6 +483,7 @@ AppState AudioHostEngine::getAppStateSnapshot() const
     AppState state;
     state.language = language;
     state.theme = theme;
+    state.bpm = bpm;
     state.statusMessage = statusMessage;
     state.lastError = lastError;
     state.isScanningPlugins = isScanningPlugins;
@@ -674,6 +678,13 @@ void AudioHostEngine::setLanguage(const juce::String& languageCode)
 void AudioHostEngine::setTheme(const juce::String& themeName)
 {
     theme = sanitiseTheme(themeName);
+    persistState();
+}
+
+void AudioHostEngine::setBpm(double bpmIn)
+{
+    bpm = juce::jlimit(20.0, 300.0, bpmIn);
+    transportPlayHead.setBpm(bpm);
     persistState();
 }
 
@@ -1063,6 +1074,8 @@ void AudioHostEngine::audioDeviceIOCallbackWithContext(const float* const* input
                                           processingBuffer.getReadPointer(1),
                                           numSamples);
     }
+
+    transportPlayHead.advance(numSamples);
 }
 
 void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
@@ -1079,6 +1092,8 @@ void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
                                currentSampleRate,
                                currentBlockSize);
     graph.prepareToPlay(currentSampleRate, currentBlockSize);
+    transportPlayHead.setSampleRate(currentSampleRate);
+    transportPlayHead.reset();
     processingBuffer.setSize(juce::jmax(device->getActiveInputChannels().countNumberOfSetBits(), 2),
                              currentBlockSize,
                              false,
@@ -1304,6 +1319,7 @@ void AudioHostEngine::persistState() const
     settings->setValue(settingsOutputGainKey, outputGainDb);
     settings->setValue(settingsLeftMonitorChannelKey, leftMonitorChannelIndex.load(std::memory_order_relaxed));
     settings->setValue(settingsRightMonitorChannelKey, rightMonitorChannelIndex.load(std::memory_order_relaxed));
+    settings->setValue(settingsBpmKey, bpm);
 
     if (auto xml = knownPluginList.createXml())
         settings->setValue(settingsPluginListKey, xml->toString());
@@ -1319,6 +1335,7 @@ void AudioHostEngine::restoreState()
     auto* settings = appProperties.getUserSettings();
     language = sanitiseLanguage(settings->getValue(settingsLanguageKey, "en"));
     theme = sanitiseTheme(settings->getValue(settingsThemeKey, "dark"));
+    bpm = settings->getDoubleValue(settingsBpmKey, 120.0);
     inputGainDb = static_cast<float>(settings->getDoubleValue(settingsInputGainKey, 0.0));
     outputGainDb = static_cast<float>(settings->getDoubleValue(settingsOutputGainKey, 0.0));
     leftMonitorChannelIndex.store(settings->getIntValue(settingsLeftMonitorChannelKey, 0), std::memory_order_relaxed);

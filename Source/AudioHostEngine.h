@@ -9,6 +9,58 @@
 namespace kasane
 {
 
+class TransportPlayHead final : public juce::AudioPlayHead
+{
+public:
+    void setBpm(double nextBpm)
+    {
+        bpm.store(nextBpm, std::memory_order_relaxed);
+    }
+
+    void setSampleRate(double nextSampleRate)
+    {
+        sampleRate.store(nextSampleRate, std::memory_order_relaxed);
+    }
+
+    void reset()
+    {
+        timeInSamples.store(0, std::memory_order_relaxed);
+    }
+
+    void advance(int numSamples)
+    {
+        timeInSamples.fetch_add(numSamples, std::memory_order_relaxed);
+    }
+
+    Optional<PositionInfo> getPosition() const override
+    {
+        const auto currentSampleRate = sampleRate.load(std::memory_order_relaxed);
+        const auto currentTimeInSamples = timeInSamples.load(std::memory_order_relaxed);
+        const auto currentBpm = bpm.load(std::memory_order_relaxed);
+        const auto currentPpqPosition = currentSampleRate > 0.0
+                                      ? (static_cast<double>(currentTimeInSamples) / currentSampleRate) * (currentBpm / 60.0)
+                                      : 0.0;
+
+        PositionInfo info;
+        info.setTimeInSamples(currentTimeInSamples);
+        info.setTimeInSeconds(currentSampleRate > 0.0 ? static_cast<double>(currentTimeInSamples) / currentSampleRate : 0.0);
+        info.setBpm(currentBpm);
+        info.setTimeSignature(TimeSignature { 4, 4 });
+        info.setPpqPosition(currentPpqPosition);
+        info.setPpqPositionOfLastBarStart(0.0);
+        info.setIsPlaying(true);
+        info.setIsRecording(false);
+        info.setIsLooping(false);
+        info.setFrameRate(fpsUnknown);
+        return info;
+    }
+
+private:
+    std::atomic<double> bpm { 120.0 };
+    std::atomic<double> sampleRate { 44100.0 };
+    std::atomic<int64_t> timeInSamples { 0 };
+};
+
 class AudioHostEngine final : private juce::AudioIODeviceCallback
 {
 public:
@@ -24,6 +76,7 @@ public:
 
     void setLanguage(const juce::String& languageCode);
     void setTheme(const juce::String& themeName);
+    void setBpm(double bpmIn);
     void setInputGainDb(float gainDb);
     void setOutputGainDb(float gainDb);
     void setTunerOpen(bool shouldBeOpen);
@@ -81,6 +134,7 @@ private:
     juce::AudioDeviceManager deviceManager;
     juce::AudioProcessorGraph graph;
     juce::AudioBuffer<float> processingBuffer;
+    TransportPlayHead transportPlayHead;
 
     juce::String language { "en" };
     juce::String theme { "dark" };
@@ -89,6 +143,7 @@ private:
     bool tunerOpen = false;
     bool isScanningPlugins = false;
 
+    double bpm = 120.0;
     float inputGainDb = 0.0f;
     float outputGainDb = 0.0f;
     double currentSampleRate = 44100.0;

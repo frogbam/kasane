@@ -5,6 +5,7 @@ const initialState: AppState = {
   bridgeVersion: '',
   language: 'en',
   theme: 'dark',
+  bpm: 120,
   statusMessage: '',
   lastError: '',
   isScanningPlugins: false,
@@ -47,6 +48,7 @@ const initialState: AppState = {
 export const bridgeVersion = signal<string>(initialState.bridgeVersion);
 export const language = signal<Language>(initialState.language);
 export const theme = signal<Theme>(initialState.theme);
+export const bpm = signal<number>(initialState.bpm);
 export const statusMessage = signal<string>(initialState.statusMessage);
 export const lastError = signal<string>(initialState.lastError);
 export const isScanningPlugins = signal<boolean>(initialState.isScanningPlugins);
@@ -82,6 +84,7 @@ export function setAppState(newState: AppState): void {
   bridgeVersion.value = newState.bridgeVersion;
   language.value = newState.language;
   theme.value = newState.theme;
+  bpm.value = newState.bpm;
   statusMessage.value = newState.statusMessage;
   lastError.value = newState.lastError;
   isScanningPlugins.value = newState.isScanningPlugins;

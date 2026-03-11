@@ -85,6 +85,7 @@ struct AppState
     juce::String bridgeVersion = kasane::bridgeVersion;
     juce::String language = "en";
     juce::String theme = "dark";
+    double bpm = 120.0;
     juce::String statusMessage;
     juce::String lastError;
     bool isScanningPlugins = false;

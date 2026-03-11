@@ -102,6 +102,44 @@
   box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
+.header__bpm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 36px;
+  padding: 0 var(--space-sm);
+  background-color: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.header__bpm-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.header__bpm-input {
+  width: 56px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.header__bpm-input:focus {
+  outline: none;
+}
+
+.header__bpm-input::-webkit-outer-spin-button,
+.header__bpm-input::-webkit-inner-spin-button {
+  margin: 0;
+}
+
 .header__btn-content {
   display: flex;
   align-items: center;

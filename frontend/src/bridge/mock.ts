@@ -55,6 +55,7 @@ const mockAppState: AppState = {
   bridgeVersion: '1.0.0-mock',
   language: 'en',
   theme: 'dark',
+  bpm: 120,
   statusMessage: 'Ready',
   lastError: '',
   isScanningPlugins: false,
@@ -141,6 +142,11 @@ class MockBridgeBackend {
 
       case 'setTheme':
         this.state.theme = this.readStringArg(payload, 0) as AppState['theme'];
+        this.emit('bootstrapState', this.state);
+        return true;
+
+      case 'setBpm':
+        this.state.bpm = this.readNumberArg(payload, 0);
         this.emit('bootstrapState', this.state);
         return true;
 

@@ -1,5 +1,5 @@
 import { useTranslation } from '../../i18n';
-import { language, theme } from '../../state';
+import { bpm, language, theme } from '../../state';
 import { bridge } from '../../bridge';
 import { Button } from '../../components';
 import type { Language } from '../../types';
@@ -29,6 +29,20 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
     const newTheme: 'dark' | 'light' = theme.value === 'dark' ? 'light' : 'dark';
     theme.value = newTheme;
     bridge.emit('setTheme', { themeName: newTheme });
+  };
+
+  const handleBpmInput = (event: Event) => {
+    const nextBpm = Number((event.currentTarget as HTMLInputElement).value);
+
+    if (!Number.isNaN(nextBpm)) {
+      bpm.value = nextBpm;
+    }
+  };
+
+  const commitBpm = () => {
+    const nextBpm = Math.max(20, Math.min(300, Math.round(bpm.value || 120)));
+    bpm.value = nextBpm;
+    bridge.emit('setBpm', { bpm: nextBpm });
   };
 
   return (
@@ -77,6 +91,26 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
             </svg>
           )}
         </button>
+
+        <label class="header__bpm" aria-label={t('header.bpm')}>
+          <span class="header__bpm-label">{t('header.bpm')}</span>
+          <input
+            class="header__bpm-input"
+            type="number"
+            min="20"
+            max="300"
+            step="1"
+            value={String(bpm.value)}
+            onInput={handleBpmInput}
+            onBlur={commitBpm}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                commitBpm();
+                (event.currentTarget as HTMLInputElement).blur();
+              }
+            }}
+          />
+        </label>
 
         <Button
           variant="ghost"

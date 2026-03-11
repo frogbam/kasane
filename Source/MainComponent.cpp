@@ -165,6 +165,14 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 emitBootstrapState();
                                 completion(true);
                             })
+        .withNativeFunction("setBpm",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                if (engine != nullptr)
+                                    engine->setBpm(readDoubleArgument(args, 0, 120.0));
+                                emitBootstrapState();
+                                completion(true);
+                            })
         .withNativeFunction("setInputGain",
                             [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                             {

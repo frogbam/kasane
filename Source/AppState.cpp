@@ -118,6 +118,7 @@ juce::var toVar(const AppState& state)
     object->setProperty("bridgeVersion", state.bridgeVersion);
     object->setProperty("language", state.language);
     object->setProperty("theme", state.theme);
+    object->setProperty("bpm", state.bpm);
     object->setProperty("statusMessage", state.statusMessage);
     object->setProperty("lastError", state.lastError);
     object->setProperty("isScanningPlugins", state.isScanningPlugins);

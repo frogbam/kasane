@@ -70,6 +70,7 @@ export interface AppState {
   bridgeVersion: string;
   language: Language;
   theme: Theme;
+  bpm: number;
   statusMessage: string;
   lastError: string;
   isScanningPlugins: boolean;
@@ -84,6 +85,7 @@ export type CommandParams = {
   frontendReady: void;
   setLanguage: { languageCode: string };
   setTheme: { themeName: string };
+  setBpm: { bpm: number };
   setInputGain: { gainDb: number };
   setOutputGain: { gainDb: number };
   scanPlugins: void;

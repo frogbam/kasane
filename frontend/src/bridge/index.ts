@@ -118,6 +118,9 @@ class Bridge {
       case 'setTheme':
         return [params?.themeName ?? 'dark'];
 
+      case 'setBpm':
+        return [params?.bpm ?? 120];
+
       case 'setInputGain':
       case 'setOutputGain':
         return [params?.gainDb ?? 0];
