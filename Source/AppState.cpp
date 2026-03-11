@@ -65,6 +65,7 @@ juce::var toVar(const AudioState& state)
     object->setProperty("inputGainDb", state.inputGainDb);
     object->setProperty("outputGainDb", state.outputGainDb);
     object->setProperty("audioDeviceType", state.audioDeviceType);
+    object->setProperty("availableDeviceTypes", makeArray(state.availableDeviceTypes, [] (const auto& value) { return juce::var(value); }));
     object->setProperty("inputDeviceId", state.inputDeviceId);
     object->setProperty("outputDeviceId", state.outputDeviceId);
     object->setProperty("inputDeviceName", state.inputDeviceName);

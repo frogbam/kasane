@@ -12,6 +12,7 @@ const initialState: AppState = {
     inputGainDb: 0,
     outputGainDb: 0,
     audioDeviceType: '',
+    availableDeviceTypes: [],
     inputDeviceId: '',
     outputDeviceId: '',
     inputDeviceName: '',

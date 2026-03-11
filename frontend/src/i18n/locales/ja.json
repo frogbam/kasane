@@ -38,6 +38,7 @@
   },
   "settings": {
     "title": "オーディオ設定",
+    "deviceType": "デバイスタイプ",
     "inputDevice": "入力デバイス",
     "outputDevice": "出力デバイス",
     "sampleRate": "サンプルレート",

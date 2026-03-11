@@ -24,19 +24,20 @@ const mockAudioState: AudioState = {
   inputGainDb: 0,
   outputGainDb: -6,
   audioDeviceType: 'ASIO',
-  inputDeviceId: 'input-1',
-  outputDeviceId: 'output-1',
+  availableDeviceTypes: ['ASIO', 'Windows Audio'],
+  inputDeviceId: 'ASIO::Audio Interface Input 1',
+  outputDeviceId: 'ASIO::Audio Interface Output 1',
   inputDeviceName: 'Audio Interface Input 1',
   outputDeviceName: 'Audio Interface Output 1',
   bufferSize: 256,
   sampleRate: 48000,
   inputDevices: [
-    { id: 'input-1', name: 'Audio Interface Input 1' },
-    { id: 'input-2', name: 'Audio Interface Input 2' },
+    { id: 'ASIO::Audio Interface Input 1', name: 'Audio Interface Input 1', type: 'ASIO' },
+    { id: 'ASIO::Audio Interface Input 2', name: 'Audio Interface Input 2', type: 'ASIO' },
   ],
   outputDevices: [
-    { id: 'output-1', name: 'Audio Interface Output 1' },
-    { id: 'output-2', name: 'Audio Interface Output 2' },
+    { id: 'ASIO::Audio Interface Output 1', name: 'Audio Interface Output 1', type: 'ASIO' },
+    { id: 'ASIO::Audio Interface Output 2', name: 'Audio Interface Output 2', type: 'ASIO' },
   ],
   bufferSizeOptions: [64, 128, 256, 512, 1024],
   sampleRateOptions: [44100, 48000, 96000],
@@ -123,6 +124,11 @@ class MockBridgeBackend {
       case 'setLanguage':
         this.state.language = this.readStringArg(payload, 0) as AppState['language'];
         this.emit('bootstrapState', this.state);
+        return true;
+
+      case 'setAudioDeviceType':
+        this.applyDeviceType(this.readStringArg(payload, 0));
+        this.emit('audioStateChanged', this.state.audio);
         return true;
 
       case 'setTheme':
@@ -218,6 +224,8 @@ class MockBridgeBackend {
         this.state.audio.outputDeviceId = this.readStringArg(payload, 1);
         this.state.audio.sampleRate = this.readNumberArg(payload, 2);
         this.state.audio.bufferSize = this.readNumberArg(payload, 3);
+        this.state.audio.inputDeviceName = this.state.audio.inputDevices.find((device) => device.id === this.state.audio.inputDeviceId)?.name ?? '';
+        this.state.audio.outputDeviceName = this.state.audio.outputDevices.find((device) => device.id === this.state.audio.outputDeviceId)?.name ?? '';
         this.emit('audioStateChanged', this.state.audio);
         return true;
     }
@@ -257,6 +265,41 @@ class MockBridgeBackend {
 
     const value = payload[index];
     return typeof value === 'boolean' ? value : false;
+  }
+
+  private applyDeviceType(deviceType: string): void {
+    this.state.audio.audioDeviceType = deviceType;
+
+    if (deviceType === 'Windows Audio') {
+      this.state.audio.inputDevices = [
+        { id: 'Windows Audio::Microphone Array', name: 'Microphone Array', type: 'Windows Audio' },
+        { id: 'Windows Audio::Line In', name: 'Line In', type: 'Windows Audio' },
+      ];
+      this.state.audio.outputDevices = [
+        { id: 'Windows Audio::Speakers', name: 'Speakers', type: 'Windows Audio' },
+        { id: 'Windows Audio::Headphones', name: 'Headphones', type: 'Windows Audio' },
+      ];
+      this.state.audio.sampleRateOptions = [44100, 48000];
+      this.state.audio.bufferSizeOptions = [128, 256, 512, 1024];
+    } else {
+      this.state.audio.inputDevices = [
+        { id: 'ASIO::Audio Interface Input 1', name: 'Audio Interface Input 1', type: 'ASIO' },
+        { id: 'ASIO::Audio Interface Input 2', name: 'Audio Interface Input 2', type: 'ASIO' },
+      ];
+      this.state.audio.outputDevices = [
+        { id: 'ASIO::Audio Interface Output 1', name: 'Audio Interface Output 1', type: 'ASIO' },
+        { id: 'ASIO::Audio Interface Output 2', name: 'Audio Interface Output 2', type: 'ASIO' },
+      ];
+      this.state.audio.sampleRateOptions = [44100, 48000, 96000];
+      this.state.audio.bufferSizeOptions = [64, 128, 256, 512, 1024];
+    }
+
+    this.state.audio.inputDeviceId = this.state.audio.inputDevices[0]?.id ?? '';
+    this.state.audio.outputDeviceId = this.state.audio.outputDevices[0]?.id ?? '';
+    this.state.audio.inputDeviceName = this.state.audio.inputDevices[0]?.name ?? '';
+    this.state.audio.outputDeviceName = this.state.audio.outputDevices[0]?.name ?? '';
+    this.state.audio.sampleRate = this.state.audio.sampleRateOptions[0] ?? 44100;
+    this.state.audio.bufferSize = this.state.audio.bufferSizeOptions[0] ?? 256;
   }
 
   private startMeterSimulation(): void {

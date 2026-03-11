@@ -98,6 +98,9 @@ class Bridge {
       case 'openAudioSettings':
         return [];
 
+      case 'setAudioDeviceType':
+        return [params?.deviceType ?? ''];
+
       case 'setLanguage':
         return [params?.languageCode ?? 'en'];
 

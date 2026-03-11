@@ -1,3 +1,4 @@
+import { useEffect } from 'preact/hooks';
 import { useTranslation } from '../../i18n';
 import { audio } from '../../state';
 import { bridge } from '../../bridge';
@@ -12,16 +13,42 @@ interface SettingsOverlayProps {
 
 export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const { t } = useTranslation();
-  
+
+  const pendingDeviceType = useSignal<string>(audio.value.audioDeviceType);
   const pendingInputDevice = useSignal<string>(audio.value.inputDeviceId);
   const pendingOutputDevice = useSignal<string>(audio.value.outputDeviceId);
   const pendingSampleRate = useSignal<number>(audio.value.sampleRate);
   const pendingBufferSize = useSignal<number>(audio.value.bufferSize);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    pendingDeviceType.value = audio.value.audioDeviceType;
+    pendingInputDevice.value = audio.value.inputDeviceId;
+    pendingOutputDevice.value = audio.value.outputDeviceId;
+    pendingSampleRate.value = audio.value.sampleRate;
+    pendingBufferSize.value = audio.value.bufferSize;
+  }, [
+    isOpen,
+    audio.value.audioDeviceType,
+    audio.value.inputDeviceId,
+    audio.value.outputDeviceId,
+    audio.value.sampleRate,
+    audio.value.bufferSize,
+  ]);
+
+  const availableDeviceTypes = audio.value.availableDeviceTypes;
   const inputDevices = audio.value.inputDevices;
   const outputDevices = audio.value.outputDevices;
   const sampleRateOptions = audio.value.sampleRateOptions;
   const bufferSizeOptions = audio.value.bufferSizeOptions;
+
+  const handleDeviceTypeChange = (deviceType: string) => {
+    pendingDeviceType.value = deviceType;
+    bridge.emit('setAudioDeviceType', { deviceType });
+  };
 
   const handleApply = () => {
     bridge.emit('setAudioDeviceSetup', {
@@ -34,6 +61,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   };
 
   const handleCancel = () => {
+    pendingDeviceType.value = audio.value.audioDeviceType;
     pendingInputDevice.value = audio.value.inputDeviceId;
     pendingOutputDevice.value = audio.value.outputDeviceId;
     pendingSampleRate.value = audio.value.sampleRate;
@@ -41,6 +69,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     onClose();
   };
 
+  const deviceTypeOptions = availableDeviceTypes.map((type) => ({ value: type, label: type }));
   const inputDeviceOptions = inputDevices.map(d => ({ value: d.id, label: d.name }));
   const outputDeviceOptions = outputDevices.map(d => ({ value: d.id, label: d.name }));
   const sampleRateOpts = sampleRateOptions.map(sr => ({ value: String(sr), label: `${sr} ${t('settings.hz')}` }));
@@ -49,6 +78,15 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   return (
     <Overlay isOpen={isOpen} onClose={onClose} title={t('settings.title')} size="md">
       <div class="settings-overlay">
+        <div class="settings-overlay__section">
+          <Select
+            label={t('settings.deviceType')}
+            value={pendingDeviceType.value}
+            onChange={handleDeviceTypeChange}
+            options={deviceTypeOptions}
+          />
+        </div>
+
         <div class="settings-overlay__section">
           <Select
             label={t('settings.inputDevice')}

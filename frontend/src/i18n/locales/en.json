@@ -38,6 +38,7 @@
   },
   "settings": {
     "title": "Audio Settings",
+    "deviceType": "Device Type",
     "inputDevice": "Input Device",
     "outputDevice": "Output Device",
     "sampleRate": "Sample Rate",

@@ -25,6 +25,7 @@ public:
     void setInputGainDb(float gainDb);
     void setOutputGainDb(float gainDb);
     void setTunerOpen(bool shouldBeOpen);
+    bool setAudioDeviceType(const juce::String& deviceType);
 
     void refreshAudioOptions();
     bool setAudioDeviceSetup(const juce::String& inputDeviceId,
@@ -87,6 +88,7 @@ private:
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
     juce::String currentDeviceType;
+    std::vector<juce::String> availableDeviceTypes;
     std::vector<DeviceOption> inputDevices;
     std::vector<DeviceOption> outputDevices;
     std::vector<int> bufferSizeOptions;

@@ -5,10 +5,8 @@
 namespace
 {
 constexpr auto windowBoundsKey = "window.bounds";
-constexpr auto minimumWindowWidth = 1024;
-constexpr auto minimumWindowHeight = 640;
-constexpr auto defaultWindowWidth = 1280;
-constexpr auto defaultWindowHeight = 800;
+constexpr auto fixedWindowWidth = 900;
+constexpr auto fixedWindowHeight = 640;
 }
 
 class KasaneApplication final : public juce::JUCEApplication
@@ -52,21 +50,19 @@ private:
             : juce::DocumentWindow(title,
                                    juce::Desktop::getInstance().getDefaultLookAndFeel()
                                        .findColour(juce::ResizableWindow::backgroundColourId),
-                                   juce::DocumentWindow::allButtons),
+                                   juce::DocumentWindow::closeButton),
               properties(propertiesIn)
         {
             setUsingNativeTitleBar(true);
-            setResizable(true, true);
-            setResizeLimits(minimumWindowWidth, minimumWindowHeight, 4096, 2160);
+            setResizable(false, false);
             setContentOwned(new kasane::MainComponent(properties), true);
 
             const auto savedBounds = juce::Rectangle<int>::fromString(properties.getUserSettings()->getValue(windowBoundsKey));
 
             if (savedBounds.isEmpty())
-                centreWithSize(defaultWindowWidth, defaultWindowHeight);
+                centreWithSize(fixedWindowWidth, fixedWindowHeight);
             else
-                setBounds(savedBounds.withSizeKeepingCentre(juce::jmax(savedBounds.getWidth(), minimumWindowWidth),
-                                                           juce::jmax(savedBounds.getHeight(), minimumWindowHeight)));
+                setBounds(savedBounds.withSizeKeepingCentre(fixedWindowWidth, fixedWindowHeight));
 
             setVisible(true);
 

@@ -38,6 +38,7 @@
   },
   "settings": {
     "title": "音频设置",
+    "deviceType": "设备类型",
     "inputDevice": "输入设备",
     "outputDevice": "输出设备",
     "sampleRate": "采样率",

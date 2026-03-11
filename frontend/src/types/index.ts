@@ -4,12 +4,14 @@ export type Theme = 'dark' | 'light';
 export interface DeviceOption {
   id: string;
   name: string;
+  type: string;
 }
 
 export interface AudioState {
   inputGainDb: number;
   outputGainDb: number;
   audioDeviceType: string;
+  availableDeviceTypes: string[];
   inputDeviceId: string;
   outputDeviceId: string;
   inputDeviceName: string;
@@ -82,6 +84,7 @@ export type CommandParams = {
   reorderPlugins: { chainPluginId: string; newIndex: number };
   openPluginEditor: { chainPluginId: string };
   openAudioSettings: void;
+  setAudioDeviceType: { deviceType: string };
   toggleTuner: { isOpen: boolean };
   setAudioDeviceSetup: {
     inputDeviceId: string;

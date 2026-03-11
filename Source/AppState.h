@@ -40,6 +40,7 @@ struct AudioState
     float inputGainDb = 0.0f;
     float outputGainDb = 0.0f;
     juce::String audioDeviceType;
+    std::vector<juce::String> availableDeviceTypes;
     juce::String inputDeviceId;
     juce::String outputDeviceId;
     juce::String inputDeviceName;

@@ -398,6 +398,7 @@ AudioState AudioHostEngine::getAudioStateSnapshot() const
     state.inputGainDb = inputGainDb;
     state.outputGainDb = outputGainDb;
     state.audioDeviceType = currentDeviceType;
+    state.availableDeviceTypes = availableDeviceTypes;
     state.inputDevices = inputDevices;
     state.outputDevices = outputDevices;
     state.bufferSizeOptions = bufferSizeOptions;
@@ -469,6 +470,37 @@ void AudioHostEngine::setOutputGainDb(float gainDb)
 void AudioHostEngine::setTunerOpen(bool shouldBeOpen)
 {
     tunerOpen = shouldBeOpen;
+}
+
+bool AudioHostEngine::setAudioDeviceType(const juce::String& deviceType)
+{
+    if (deviceType.isEmpty() || deviceType == currentDeviceType)
+    {
+        refreshDeviceLists();
+        return true;
+    }
+
+    const auto iterator = std::find(availableDeviceTypes.begin(), availableDeviceTypes.end(), deviceType);
+
+    if (iterator == availableDeviceTypes.end())
+    {
+        setLastError("The selected audio device type is unavailable.");
+        return false;
+    }
+
+    deviceManager.setCurrentAudioDeviceType(deviceType, true);
+
+    refreshDeviceLists();
+
+    if (currentDeviceType != deviceType)
+    {
+        setLastError("Failed to switch the audio device type.");
+        return false;
+    }
+
+    statusMessage = "Audio device type updated.";
+    persistState();
+    return true;
 }
 
 void AudioHostEngine::refreshAudioOptions()
@@ -880,20 +912,22 @@ void AudioHostEngine::rebuildGraphConnections()
 void AudioHostEngine::refreshDeviceLists()
 {
     auto& deviceTypes = deviceManager.getAvailableDeviceTypes();
+    availableDeviceTypes.clear();
+    juce::String preferredDeviceType;
 
-    if (currentDeviceType.isEmpty())
+    for (auto* type : deviceTypes)
     {
-        for (auto* type : deviceTypes)
-        {
-            type->scanForDevices();
+        type->scanForDevices();
+        availableDeviceTypes.push_back(type->getTypeName());
 
-            if (type->getTypeName().containsIgnoreCase("ASIO"))
-            {
-                deviceManager.setCurrentAudioDeviceType(type->getTypeName(), true);
-                break;
-            }
+        if (preferredDeviceType.isEmpty() && type->getTypeName().containsIgnoreCase("ASIO"))
+        {
+            preferredDeviceType = type->getTypeName();
         }
     }
+
+    if (currentDeviceType.isEmpty() && preferredDeviceType.isNotEmpty())
+        deviceManager.setCurrentAudioDeviceType(preferredDeviceType, true);
 
     currentDeviceType = deviceManager.getCurrentAudioDeviceType();
     updateDeviceOptionsForType(currentDeviceType);

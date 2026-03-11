@@ -237,6 +237,20 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 }
                                 emitAudioState();
                             })
+        .withNativeFunction("setAudioDeviceType",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                if (engine != nullptr)
+                                {
+                                    completion(engine->setAudioDeviceType(readStringArgument(args, 0)));
+                                    emitAudioState();
+                                    emitErrorIfNeeded();
+                                }
+                                else
+                                {
+                                    completion(false);
+                                }
+                            })
         .withNativeFunction("toggleTuner",
                             [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                             {
