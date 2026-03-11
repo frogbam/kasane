@@ -862,6 +862,9 @@ void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
     if (auto* outputProcessor = dynamic_cast<AnalysisTapProcessor*>(outputAnalysisNode->getProcessor()))
         outputProcessor->setSampleRate(currentSampleRate);
 
+    // Rebuild the passthrough chain after the audio device has reported its
+    // active channel layout, so startup uses the live I/O configuration.
+    rebuildGraphConnections();
     refreshDeviceLists();
 }
 
