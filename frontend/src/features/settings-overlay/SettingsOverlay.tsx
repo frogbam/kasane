@@ -4,6 +4,7 @@ import { audio } from '../../state';
 import { bridge } from '../../bridge';
 import { Overlay, Select, Button } from '../../components';
 import { useSignal } from '@preact/signals';
+import type { AudioState } from '../../types';
 import './SettingsOverlay.css';
 
 interface SettingsOverlayProps {
@@ -21,12 +22,14 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const pendingBufferSize = useSignal<number>(audio.value.bufferSize);
   const pendingLeftMonitorChannel = useSignal<string>(audio.value.leftMonitorChannelId);
   const pendingRightMonitorChannel = useSignal<string>(audio.value.rightMonitorChannelId);
+  const previewAudio = useSignal<AudioState>(audio.value);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
+    previewAudio.value = audio.value;
     pendingDeviceType.value = audio.value.audioDeviceType;
     pendingInputDevice.value = audio.value.inputDeviceId;
     pendingOutputDevice.value = audio.value.outputDeviceId;
@@ -45,12 +48,31 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     audio.value.rightMonitorChannelId,
   ]);
 
-  const availableDeviceTypes = audio.value.availableDeviceTypes;
-  const inputDevices = audio.value.inputDevices;
-  const outputDevices = audio.value.outputDevices;
-  const outputChannelOptions = audio.value.outputChannelOptions;
-  const sampleRateOptions = audio.value.sampleRateOptions;
-  const bufferSizeOptions = audio.value.bufferSizeOptions;
+  const availableDeviceTypes = previewAudio.value.availableDeviceTypes;
+  const inputDevices = previewAudio.value.inputDevices;
+  const outputDevices = previewAudio.value.outputDevices;
+  const outputChannelOptions = previewAudio.value.outputChannelOptions;
+  const sampleRateOptions = previewAudio.value.sampleRateOptions;
+  const bufferSizeOptions = previewAudio.value.bufferSizeOptions;
+
+  const refreshPreview = async (inputDeviceId: string, outputDeviceId: string) => {
+    const preview = await bridge.request('previewAudioDeviceSetup', {
+      inputDeviceId,
+      outputDeviceId,
+    }) as AudioState | null;
+
+    if (!preview) {
+      return;
+    }
+
+    previewAudio.value = preview;
+    pendingInputDevice.value = preview.inputDeviceId;
+    pendingOutputDevice.value = preview.outputDeviceId;
+    pendingSampleRate.value = preview.sampleRate;
+    pendingBufferSize.value = preview.bufferSize;
+    pendingLeftMonitorChannel.value = preview.leftMonitorChannelId;
+    pendingRightMonitorChannel.value = preview.rightMonitorChannelId;
+  };
 
   const handleDeviceTypeChange = (deviceType: string) => {
     pendingDeviceType.value = deviceType;
@@ -104,7 +126,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
           <Select
             label={t('settings.inputDevice')}
             value={pendingInputDevice.value}
-            onChange={(v) => { pendingInputDevice.value = v; }}
+            onChange={(v) => { void refreshPreview(v, ''); }}
             options={inputDeviceOptions}
           />
         </div>
@@ -113,7 +135,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
           <Select
             label={t('settings.outputDevice')}
             value={pendingOutputDevice.value}
-            onChange={(v) => { pendingOutputDevice.value = v; }}
+            onChange={(v) => { void refreshPreview('', v); }}
             options={outputDeviceOptions}
           />
         </div>

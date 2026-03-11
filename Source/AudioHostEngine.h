@@ -17,6 +17,8 @@ public:
 
     AppState getAppStateSnapshot() const;
     AudioState getAudioStateSnapshot() const;
+    AudioState previewAudioDeviceSetup(const juce::String& inputDeviceId,
+                                       const juce::String& outputDeviceId);
     TunerState getTunerStateSnapshot() const;
     MeterState getMeterStateSnapshot() const;
 
@@ -64,6 +66,7 @@ private:
     void rebuildGraphConnections();
     void refreshDeviceLists();
     void updateDeviceOptionsForType(const juce::String& deviceType);
+    void refreshMonitorChannelSelection();
     void persistState() const;
     void restoreState();
     void clearEditors();
@@ -77,6 +80,7 @@ private:
     juce::KnownPluginList knownPluginList;
     juce::AudioDeviceManager deviceManager;
     juce::AudioProcessorGraph graph;
+    juce::AudioBuffer<float> processingBuffer;
 
     juce::String language { "en" };
     juce::String theme { "dark" };
@@ -111,6 +115,8 @@ private:
     std::atomic<float> inputRightDb { -100.0f };
     std::atomic<float> outputLeftDb { -100.0f };
     std::atomic<float> outputRightDb { -100.0f };
+    std::atomic<int> leftMonitorChannelIndex { 0 };
+    std::atomic<int> rightMonitorChannelIndex { 1 };
     std::atomic<float> tunerFrequencyHz { 0.0f };
     std::atomic<float> tunerSignalLevel { 0.0f };
     std::atomic<int> tunerCents { 0 };

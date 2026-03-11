@@ -13,6 +13,8 @@ constexpr auto settingsPluginListKey = "plugins.knownListXml";
 constexpr auto settingsAudioStateKey = "audio.deviceStateXml";
 constexpr auto settingsInputGainKey = "audio.inputGainDb";
 constexpr auto settingsOutputGainKey = "audio.outputGainDb";
+constexpr auto settingsLeftMonitorChannelKey = "audio.leftMonitorChannel";
+constexpr auto settingsRightMonitorChannelKey = "audio.rightMonitorChannel";
 
 constexpr float minimumDb = -100.0f;
 
@@ -168,6 +170,87 @@ std::pair<int, int> getSelectedOutputChannels(const juce::AudioIODevice* device,
         rightChannel = leftChannel == 0 ? 1 : leftChannel;
 
     return { leftChannel, rightChannel };
+}
+
+bool hasChannelOption(const std::vector<ChannelOption>& options, int channelIndex)
+{
+    return std::any_of(options.begin(), options.end(), [channelIndex] (const auto& option)
+    {
+        return option.index == channelIndex;
+    });
+}
+
+int getFallbackMonitorChannel(const std::vector<ChannelOption>& options, int fallbackIndex)
+{
+    if (options.empty())
+        return fallbackIndex;
+
+    if (hasChannelOption(options, fallbackIndex))
+        return fallbackIndex;
+
+    return options.front().index;
+}
+
+int getAlternateMonitorChannel(const std::vector<ChannelOption>& options, int currentIndex)
+{
+    for (const auto& option : options)
+        if (option.index != currentIndex)
+            return option.index;
+
+    return currentIndex;
+}
+
+int resolveCallbackOutputChannelIndex(const float* const* outputChannelData,
+                                      int numOutputChannels,
+                                      const juce::BigInteger& activeOutputChannels,
+                                      int physicalChannelIndex)
+{
+    if (physicalChannelIndex >= 0
+        && physicalChannelIndex < numOutputChannels
+        && outputChannelData[physicalChannelIndex] != nullptr)
+    {
+        return physicalChannelIndex;
+    }
+
+    auto callbackChannelIndex = 0;
+
+    for (auto bit = activeOutputChannels.findNextSetBit(0); bit >= 0; bit = activeOutputChannels.findNextSetBit(bit + 1))
+    {
+        if (bit == physicalChannelIndex)
+            return callbackChannelIndex < numOutputChannels ? callbackChannelIndex : -1;
+
+        ++callbackChannelIndex;
+    }
+
+    return -1;
+}
+
+std::pair<juce::String, juce::String> normaliseDeviceNamesForType(const juce::String& deviceType,
+                                                                  const juce::String& currentInputName,
+                                                                  const juce::String& currentOutputName,
+                                                                  const std::optional<std::pair<juce::String, juce::String>>& parsedInput,
+                                                                  const std::optional<std::pair<juce::String, juce::String>>& parsedOutput)
+{
+    auto inputName = parsedInput ? parsedInput->second : currentInputName;
+    auto outputName = parsedOutput ? parsedOutput->second : currentOutputName;
+
+    if (!deviceType.containsIgnoreCase("ASIO"))
+        return { inputName, outputName };
+
+    if (parsedInput && parsedInput->second.isNotEmpty())
+        return { parsedInput->second, parsedInput->second };
+
+    if (parsedOutput && parsedOutput->second.isNotEmpty())
+        return { parsedOutput->second, parsedOutput->second };
+
+    if (inputName.isEmpty() && outputName.isNotEmpty())
+        inputName = outputName;
+    else if (outputName.isEmpty() && inputName.isNotEmpty())
+        outputName = inputName;
+    else if (inputName != outputName)
+        outputName = inputName;
+
+    return { inputName, outputName };
 }
 
 class PassthroughProcessor : public juce::AudioProcessor
@@ -454,16 +537,110 @@ AudioState AudioHostEngine::getAudioStateSnapshot() const
     state.sampleRateOptions = sampleRateOptions;
 
     const auto setup = deviceManager.getAudioDeviceSetup();
-    const auto* device = deviceManager.getCurrentAudioDevice();
-    const auto [leftMonitorChannel, rightMonitorChannel] = getSelectedOutputChannels(device, setup);
     state.inputDeviceName = setup.inputDeviceName;
     state.outputDeviceName = setup.outputDeviceName;
     state.inputDeviceId = makeDeviceId(currentDeviceType, setup.inputDeviceName);
     state.outputDeviceId = makeDeviceId(currentDeviceType, setup.outputDeviceName);
-    state.leftMonitorChannelId = makeChannelId(leftMonitorChannel);
-    state.rightMonitorChannelId = makeChannelId(rightMonitorChannel);
+    state.leftMonitorChannelId = makeChannelId(leftMonitorChannelIndex.load(std::memory_order_relaxed));
+    state.rightMonitorChannelId = makeChannelId(rightMonitorChannelIndex.load(std::memory_order_relaxed));
     state.bufferSize = setup.bufferSize;
     state.sampleRate = setup.sampleRate;
+    return state;
+}
+
+AudioState AudioHostEngine::previewAudioDeviceSetup(const juce::String& inputDeviceId,
+                                                    const juce::String& outputDeviceId)
+{
+    auto state = getAudioStateSnapshot();
+    auto previewDeviceType = currentDeviceType;
+    const auto parsedInput = parseDeviceId(inputDeviceId);
+    const auto parsedOutput = parseDeviceId(outputDeviceId);
+
+    if (parsedInput)
+        previewDeviceType = parsedInput->first;
+
+    if (parsedOutput)
+        previewDeviceType = parsedOutput->first;
+
+    state.audioDeviceType = previewDeviceType;
+    state.availableDeviceTypes = availableDeviceTypes;
+    state.inputDevices.clear();
+    state.outputDevices.clear();
+    state.outputChannelOptions.clear();
+    state.sampleRateOptions.clear();
+    state.bufferSizeOptions.clear();
+
+    for (auto* type : deviceManager.getAvailableDeviceTypes())
+    {
+        type->scanForDevices();
+
+        if (type->getTypeName() != previewDeviceType)
+            continue;
+
+        for (const auto& name : type->getDeviceNames(true))
+            state.inputDevices.push_back({ makeDeviceId(previewDeviceType, name), name, previewDeviceType });
+
+        for (const auto& name : type->getDeviceNames(false))
+            state.outputDevices.push_back({ makeDeviceId(previewDeviceType, name), name, previewDeviceType });
+
+        auto [selectedInputName, selectedOutputName] = normaliseDeviceNamesForType(previewDeviceType,
+                                                                                   state.inputDeviceName,
+                                                                                   state.outputDeviceName,
+                                                                                   parsedInput,
+                                                                                   parsedOutput);
+
+        const auto hasInput = std::any_of(state.inputDevices.begin(), state.inputDevices.end(), [&] (const auto& device)
+        {
+            return device.name == selectedInputName;
+        });
+        const auto hasOutput = std::any_of(state.outputDevices.begin(), state.outputDevices.end(), [&] (const auto& device)
+        {
+            return device.name == selectedOutputName;
+        });
+
+        if (!hasInput && !state.inputDevices.empty())
+            selectedInputName = state.inputDevices.front().name;
+
+        if (!hasOutput && !state.outputDevices.empty())
+            selectedOutputName = state.outputDevices.front().name;
+
+        state.inputDeviceName = selectedInputName;
+        state.outputDeviceName = selectedOutputName;
+        state.inputDeviceId = selectedInputName.isNotEmpty() ? makeDeviceId(previewDeviceType, selectedInputName) : juce::String {};
+        state.outputDeviceId = selectedOutputName.isNotEmpty() ? makeDeviceId(previewDeviceType, selectedOutputName) : juce::String {};
+
+        std::unique_ptr<juce::AudioIODevice> previewDevice { type->createDevice(selectedOutputName, selectedInputName) };
+
+        if (previewDevice != nullptr)
+        {
+            const auto outputChannelNames = previewDevice->getOutputChannelNames();
+
+            for (int channelIndex = 0; channelIndex < outputChannelNames.size(); ++channelIndex)
+            {
+                const auto channelName = outputChannelNames[channelIndex].isNotEmpty()
+                                       ? outputChannelNames[channelIndex]
+                                       : "Output " + juce::String(channelIndex + 1);
+                state.outputChannelOptions.push_back({ makeChannelId(channelIndex), channelName, channelIndex });
+            }
+
+            for (const auto sampleRate : previewDevice->getAvailableSampleRates())
+                state.sampleRateOptions.push_back(sampleRate);
+
+            for (const auto bufferSize : previewDevice->getAvailableBufferSizes())
+                state.bufferSizeOptions.push_back(bufferSize);
+        }
+
+        break;
+    }
+
+    auto leftChannel = getFallbackMonitorChannel(state.outputChannelOptions, leftMonitorChannelIndex.load(std::memory_order_relaxed));
+    auto rightChannel = getFallbackMonitorChannel(state.outputChannelOptions, rightMonitorChannelIndex.load(std::memory_order_relaxed));
+
+    if (leftChannel == rightChannel)
+        rightChannel = getAlternateMonitorChannel(state.outputChannelOptions, leftChannel);
+
+    state.leftMonitorChannelId = makeChannelId(leftChannel);
+    state.rightMonitorChannelId = makeChannelId(rightChannel);
     return state;
 }
 
@@ -569,11 +746,13 @@ bool AudioHostEngine::setAudioDeviceSetup(const juce::String& inputDeviceId,
                                           const juce::String& rightMonitorChannelId)
 {
     auto desiredType = currentDeviceType;
+    const auto parsedInput = parseDeviceId(inputDeviceId);
+    const auto parsedOutput = parseDeviceId(outputDeviceId);
 
-    if (const auto parsedInput = parseDeviceId(inputDeviceId))
+    if (parsedInput)
         desiredType = parsedInput->first;
 
-    if (const auto parsedOutput = parseDeviceId(outputDeviceId))
+    if (parsedOutput)
     {
         if (desiredType.isNotEmpty() && desiredType != parsedOutput->first)
         {
@@ -588,12 +767,14 @@ bool AudioHostEngine::setAudioDeviceSetup(const juce::String& inputDeviceId,
         deviceManager.setCurrentAudioDeviceType(desiredType, true);
 
     auto setup = deviceManager.getAudioDeviceSetup();
+    const auto [normalisedInputName, normalisedOutputName] = normaliseDeviceNamesForType(desiredType,
+                                                                                         setup.inputDeviceName,
+                                                                                         setup.outputDeviceName,
+                                                                                         parsedInput,
+                                                                                         parsedOutput);
 
-    if (const auto parsedInput = parseDeviceId(inputDeviceId))
-        setup.inputDeviceName = parsedInput->second;
-
-    if (const auto parsedOutput = parseDeviceId(outputDeviceId))
-        setup.outputDeviceName = parsedOutput->second;
+    setup.inputDeviceName = normalisedInputName;
+    setup.outputDeviceName = normalisedOutputName;
 
     if (sampleRate > 0.0)
         setup.sampleRate = sampleRate;
@@ -601,23 +782,8 @@ bool AudioHostEngine::setAudioDeviceSetup(const juce::String& inputDeviceId,
     if (bufferSize > 0)
         setup.bufferSize = bufferSize;
 
-    if (const auto leftMonitorChannel = parseChannelId(leftMonitorChannelId))
-    {
-        setup.useDefaultOutputChannels = false;
-        setup.outputChannels.clear();
-        setup.outputChannels.setBit(*leftMonitorChannel);
-
-        if (const auto rightMonitorChannel = parseChannelId(rightMonitorChannelId))
-        {
-            if (*rightMonitorChannel == *leftMonitorChannel)
-            {
-                setLastError("Left and right monitor outputs must be different.");
-                return false;
-            }
-
-            setup.outputChannels.setBit(*rightMonitorChannel);
-        }
-    }
+    setup.useDefaultOutputChannels = true;
+    setup.outputChannels.clear();
 
     const auto error = deviceManager.setAudioDeviceSetup(setup, true);
 
@@ -628,6 +794,26 @@ bool AudioHostEngine::setAudioDeviceSetup(const juce::String& inputDeviceId,
     }
 
     refreshDeviceLists();
+
+    auto nextLeftMonitorChannel = leftMonitorChannelIndex.load(std::memory_order_relaxed);
+    auto nextRightMonitorChannel = rightMonitorChannelIndex.load(std::memory_order_relaxed);
+
+    if (const auto parsedLeftMonitorChannel = parseChannelId(leftMonitorChannelId))
+        nextLeftMonitorChannel = *parsedLeftMonitorChannel;
+
+    if (const auto parsedRightMonitorChannel = parseChannelId(rightMonitorChannelId))
+        nextRightMonitorChannel = *parsedRightMonitorChannel;
+
+    nextLeftMonitorChannel = getFallbackMonitorChannel(outputChannelOptions, nextLeftMonitorChannel);
+    nextRightMonitorChannel = getFallbackMonitorChannel(outputChannelOptions, nextRightMonitorChannel);
+
+    if (nextLeftMonitorChannel == nextRightMonitorChannel)
+    {
+        nextRightMonitorChannel = getAlternateMonitorChannel(outputChannelOptions, nextLeftMonitorChannel);
+    }
+
+    leftMonitorChannelIndex.store(nextLeftMonitorChannel, std::memory_order_relaxed);
+    rightMonitorChannelIndex.store(nextRightMonitorChannel, std::memory_order_relaxed);
     statusMessage = "Audio device updated.";
     persistState();
     return true;
@@ -830,15 +1016,53 @@ void AudioHostEngine::audioDeviceIOCallbackWithContext(const float* const* input
                                                        int numSamples,
                                                        const juce::AudioIODeviceCallbackContext&)
 {
-    juce::AudioBuffer<float> buffer(outputChannelData, numOutputChannels, numSamples);
-    buffer.clear();
+    const auto processingChannels = juce::jmax(juce::jmax(numInputChannels, 2), 2);
 
-    for (int channel = 0; channel < juce::jmin(numInputChannels, numOutputChannels); ++channel)
+    if (processingBuffer.getNumChannels() != processingChannels
+        || processingBuffer.getNumSamples() != numSamples)
+    {
+        processingBuffer.setSize(processingChannels, numSamples, false, false, true);
+    }
+
+    processingBuffer.clear();
+
+    for (int channel = 0; channel < numInputChannels; ++channel)
         if (inputChannelData[channel] != nullptr)
-            buffer.copyFrom(channel, 0, inputChannelData[channel], numSamples);
+            processingBuffer.copyFrom(channel, 0, inputChannelData[channel], numSamples);
 
     juce::MidiBuffer midi;
-    graph.processBlock(buffer, midi);
+    graph.processBlock(processingBuffer, midi);
+
+    for (int channel = 0; channel < numOutputChannels; ++channel)
+        if (outputChannelData[channel] != nullptr)
+            juce::FloatVectorOperations::clear(outputChannelData[channel], numSamples);
+
+    const auto* device = deviceManager.getCurrentAudioDevice();
+    const auto activeOutputChannels = device != nullptr ? device->getActiveOutputChannels() : juce::BigInteger {};
+    const auto leftPhysicalChannel = leftMonitorChannelIndex.load(std::memory_order_relaxed);
+    const auto rightPhysicalChannel = rightMonitorChannelIndex.load(std::memory_order_relaxed);
+    const auto leftCallbackChannel = resolveCallbackOutputChannelIndex(outputChannelData,
+                                                                      numOutputChannels,
+                                                                      activeOutputChannels,
+                                                                      leftPhysicalChannel);
+    const auto rightCallbackChannel = resolveCallbackOutputChannelIndex(outputChannelData,
+                                                                       numOutputChannels,
+                                                                       activeOutputChannels,
+                                                                       rightPhysicalChannel);
+
+    if (leftCallbackChannel >= 0 && outputChannelData[leftCallbackChannel] != nullptr)
+    {
+        juce::FloatVectorOperations::copy(outputChannelData[leftCallbackChannel],
+                                          processingBuffer.getReadPointer(0),
+                                          numSamples);
+    }
+
+    if (rightCallbackChannel >= 0 && outputChannelData[rightCallbackChannel] != nullptr)
+    {
+        juce::FloatVectorOperations::copy(outputChannelData[rightCallbackChannel],
+                                          processingBuffer.getReadPointer(1),
+                                          numSamples);
+    }
 }
 
 void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
@@ -851,10 +1075,15 @@ void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
 
     graph.releaseResources();
     graph.setPlayConfigDetails(device->getActiveInputChannels().countNumberOfSetBits(),
-                               device->getActiveOutputChannels().countNumberOfSetBits(),
+                               2,
                                currentSampleRate,
                                currentBlockSize);
     graph.prepareToPlay(currentSampleRate, currentBlockSize);
+    processingBuffer.setSize(juce::jmax(device->getActiveInputChannels().countNumberOfSetBits(), 2),
+                             currentBlockSize,
+                             false,
+                             false,
+                             true);
 
     if (auto* inputProcessor = dynamic_cast<AnalysisTapProcessor*>(inputAnalysisNode->getProcessor()))
         inputProcessor->setSampleRate(currentSampleRate);
@@ -870,6 +1099,7 @@ void AudioHostEngine::audioDeviceAboutToStart(juce::AudioIODevice* device)
 
 void AudioHostEngine::audioDeviceStopped()
 {
+    processingBuffer.setSize(0, 0);
     graph.releaseResources();
 }
 
@@ -1049,6 +1279,20 @@ void AudioHostEngine::updateDeviceOptionsForType(const juce::String& deviceType)
         for (const auto bufferSize : device->getAvailableBufferSizes())
             bufferSizeOptions.push_back(bufferSize);
     }
+
+    refreshMonitorChannelSelection();
+}
+
+void AudioHostEngine::refreshMonitorChannelSelection()
+{
+    auto leftChannel = getFallbackMonitorChannel(outputChannelOptions, leftMonitorChannelIndex.load(std::memory_order_relaxed));
+    auto rightChannel = getFallbackMonitorChannel(outputChannelOptions, rightMonitorChannelIndex.load(std::memory_order_relaxed));
+
+    if (leftChannel == rightChannel)
+        rightChannel = getAlternateMonitorChannel(outputChannelOptions, leftChannel);
+
+    leftMonitorChannelIndex.store(leftChannel, std::memory_order_relaxed);
+    rightMonitorChannelIndex.store(rightChannel, std::memory_order_relaxed);
 }
 
 void AudioHostEngine::persistState() const
@@ -1058,6 +1302,8 @@ void AudioHostEngine::persistState() const
     settings->setValue(settingsThemeKey, theme);
     settings->setValue(settingsInputGainKey, inputGainDb);
     settings->setValue(settingsOutputGainKey, outputGainDb);
+    settings->setValue(settingsLeftMonitorChannelKey, leftMonitorChannelIndex.load(std::memory_order_relaxed));
+    settings->setValue(settingsRightMonitorChannelKey, rightMonitorChannelIndex.load(std::memory_order_relaxed));
 
     if (auto xml = knownPluginList.createXml())
         settings->setValue(settingsPluginListKey, xml->toString());
@@ -1075,6 +1321,8 @@ void AudioHostEngine::restoreState()
     theme = sanitiseTheme(settings->getValue(settingsThemeKey, "dark"));
     inputGainDb = static_cast<float>(settings->getDoubleValue(settingsInputGainKey, 0.0));
     outputGainDb = static_cast<float>(settings->getDoubleValue(settingsOutputGainKey, 0.0));
+    leftMonitorChannelIndex.store(settings->getIntValue(settingsLeftMonitorChannelKey, 0), std::memory_order_relaxed);
+    rightMonitorChannelIndex.store(settings->getIntValue(settingsRightMonitorChannelKey, 1), std::memory_order_relaxed);
 
     if (const auto xmlString = settings->getValue(settingsPluginListKey); xmlString.isNotEmpty())
         if (auto xml = juce::parseXML(xmlString))

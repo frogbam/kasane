@@ -217,6 +217,9 @@ class MockBridgeBackend {
         this.emit('audioStateChanged', this.state.audio);
         return this.state.audio;
 
+      case 'previewAudioDeviceSetup':
+        return this.previewAudioState(this.readStringArg(payload, 0), this.readStringArg(payload, 1));
+
       case 'toggleTuner':
         this.state.tuner.isOpen = this.readBooleanArg(payload, 0);
         this.emit('tunerUpdated', this.state.tuner);
@@ -324,6 +327,33 @@ class MockBridgeBackend {
     this.state.audio.rightMonitorChannelId = channelOptions[1]?.id ?? channelOptions[0]?.id ?? '0';
     this.state.audio.sampleRate = this.state.audio.sampleRateOptions[0] ?? 44100;
     this.state.audio.bufferSize = this.state.audio.bufferSizeOptions[0] ?? 256;
+  }
+
+  private previewAudioState(inputDeviceId: string, outputDeviceId: string): AudioState {
+    const preview = JSON.parse(JSON.stringify(this.state.audio)) as AudioState;
+
+    preview.inputDeviceId = inputDeviceId || preview.inputDeviceId;
+    preview.outputDeviceId = outputDeviceId || preview.outputDeviceId;
+    preview.inputDeviceName = preview.inputDevices.find((device) => device.id === preview.inputDeviceId)?.name ?? preview.inputDeviceName;
+    preview.outputDeviceName = preview.outputDevices.find((device) => device.id === preview.outputDeviceId)?.name ?? preview.outputDeviceName;
+
+    if (preview.outputDeviceId.endsWith('Output 2')) {
+      preview.outputChannelOptions = [
+        { id: '2', name: 'Out 3', index: 2 },
+        { id: '3', name: 'Out 4', index: 3 },
+      ];
+      preview.leftMonitorChannelId = '2';
+      preview.rightMonitorChannelId = '3';
+    } else {
+      preview.outputChannelOptions = [
+        { id: '0', name: 'Out 1', index: 0 },
+        { id: '1', name: 'Out 2', index: 1 },
+      ];
+      preview.leftMonitorChannelId = '0';
+      preview.rightMonitorChannelId = '1';
+    }
+
+    return preview;
   }
 
   private startMeterSimulation(): void {

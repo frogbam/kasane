@@ -69,6 +69,14 @@ class Bridge {
     void this.invoke(command, params);
   }
 
+  request<K extends CommandName>(command: K, params?: CommandParams[K]): Promise<unknown> {
+    if (!this.backend) {
+      return Promise.resolve(null);
+    }
+
+    return this.invoke(command, params);
+  }
+
   isReady(): boolean {
     return this.isInitialized && this.backend !== null;
   }
@@ -97,6 +105,9 @@ class Bridge {
       case 'scanPlugins':
       case 'openAudioSettings':
         return [];
+
+      case 'previewAudioDeviceSetup':
+        return [params?.inputDeviceId ?? '', params?.outputDeviceId ?? ''];
 
       case 'setAudioDeviceType':
         return [params?.deviceType ?? ''];

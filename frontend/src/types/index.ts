@@ -93,6 +93,10 @@ export type CommandParams = {
   reorderPlugins: { chainPluginId: string; newIndex: number };
   openPluginEditor: { chainPluginId: string };
   openAudioSettings: void;
+  previewAudioDeviceSetup: {
+    inputDeviceId: string;
+    outputDeviceId: string;
+  };
   setAudioDeviceType: { deviceType: string };
   toggleTuner: { isOpen: boolean };
   setAudioDeviceSetup: {
