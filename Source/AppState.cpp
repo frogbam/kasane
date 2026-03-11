@@ -35,6 +35,15 @@ juce::var toVar(const DeviceOption& device)
     return object.get();
 }
 
+juce::var toVar(const ChannelOption& channel)
+{
+    auto object = makeObject();
+    object->setProperty("id", channel.id);
+    object->setProperty("name", channel.name);
+    object->setProperty("index", channel.index);
+    return object.get();
+}
+
 juce::var toVar(const PluginDescriptor& plugin)
 {
     auto object = makeObject();
@@ -70,6 +79,9 @@ juce::var toVar(const AudioState& state)
     object->setProperty("outputDeviceId", state.outputDeviceId);
     object->setProperty("inputDeviceName", state.inputDeviceName);
     object->setProperty("outputDeviceName", state.outputDeviceName);
+    object->setProperty("outputChannelOptions", makeArray(state.outputChannelOptions, [] (const auto& channel) { return toVar(channel); }));
+    object->setProperty("leftMonitorChannelId", state.leftMonitorChannelId);
+    object->setProperty("rightMonitorChannelId", state.rightMonitorChannelId);
     object->setProperty("bufferSize", state.bufferSize);
     object->setProperty("sampleRate", state.sampleRate);
     object->setProperty("inputDevices", makeArray(state.inputDevices, [] (const auto& device) { return toVar(device); }));

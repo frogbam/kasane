@@ -31,7 +31,9 @@ public:
     bool setAudioDeviceSetup(const juce::String& inputDeviceId,
                              const juce::String& outputDeviceId,
                              double sampleRate,
-                             int bufferSize);
+                             int bufferSize,
+                             const juce::String& leftMonitorChannelId,
+                             const juce::String& rightMonitorChannelId);
 
     bool scanForPlugins();
     bool addPluginToChain(const juce::String& pluginDescriptorId);
@@ -91,6 +93,7 @@ private:
     std::vector<juce::String> availableDeviceTypes;
     std::vector<DeviceOption> inputDevices;
     std::vector<DeviceOption> outputDevices;
+    std::vector<ChannelOption> outputChannelOptions;
     std::vector<int> bufferSizeOptions;
     std::vector<double> sampleRateOptions;
 

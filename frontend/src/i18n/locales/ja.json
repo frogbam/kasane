@@ -41,6 +41,8 @@
     "deviceType": "デバイスタイプ",
     "inputDevice": "入力デバイス",
     "outputDevice": "出力デバイス",
+    "leftMonitor": "左モニター",
+    "rightMonitor": "右モニター",
     "sampleRate": "サンプルレート",
     "bufferSize": "バッファサイズ",
     "apply": "適用",

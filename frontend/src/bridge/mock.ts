@@ -1,4 +1,4 @@
-import type { AppState, AudioState, TunerState, MeterState, PluginDescriptor, ChainSlot } from '../types';
+import type { AppState, AudioState, TunerState, MeterState, PluginDescriptor, ChainSlot, ChannelOption } from '../types';
 
 type EventCallback = (payload: unknown) => void;
 
@@ -29,6 +29,14 @@ const mockAudioState: AudioState = {
   outputDeviceId: 'ASIO::Audio Interface Output 1',
   inputDeviceName: 'Audio Interface Input 1',
   outputDeviceName: 'Audio Interface Output 1',
+  outputChannelOptions: [
+    { id: '0', name: 'Out 1', index: 0 },
+    { id: '1', name: 'Out 2', index: 1 },
+    { id: '2', name: 'Out 3', index: 2 },
+    { id: '3', name: 'Out 4', index: 3 },
+  ],
+  leftMonitorChannelId: '0',
+  rightMonitorChannelId: '1',
   bufferSize: 256,
   sampleRate: 48000,
   inputDevices: [
@@ -224,6 +232,8 @@ class MockBridgeBackend {
         this.state.audio.outputDeviceId = this.readStringArg(payload, 1);
         this.state.audio.sampleRate = this.readNumberArg(payload, 2);
         this.state.audio.bufferSize = this.readNumberArg(payload, 3);
+        this.state.audio.leftMonitorChannelId = this.readStringArg(payload, 4);
+        this.state.audio.rightMonitorChannelId = this.readStringArg(payload, 5);
         this.state.audio.inputDeviceName = this.state.audio.inputDevices.find((device) => device.id === this.state.audio.inputDeviceId)?.name ?? '';
         this.state.audio.outputDeviceName = this.state.audio.outputDevices.find((device) => device.id === this.state.audio.outputDeviceId)?.name ?? '';
         this.emit('audioStateChanged', this.state.audio);
@@ -269,6 +279,7 @@ class MockBridgeBackend {
 
   private applyDeviceType(deviceType: string): void {
     this.state.audio.audioDeviceType = deviceType;
+    let channelOptions: ChannelOption[];
 
     if (deviceType === 'Windows Audio') {
       this.state.audio.inputDevices = [
@@ -281,6 +292,10 @@ class MockBridgeBackend {
       ];
       this.state.audio.sampleRateOptions = [44100, 48000];
       this.state.audio.bufferSizeOptions = [128, 256, 512, 1024];
+      channelOptions = [
+        { id: '0', name: 'Speaker 1', index: 0 },
+        { id: '1', name: 'Speaker 2', index: 1 },
+      ];
     } else {
       this.state.audio.inputDevices = [
         { id: 'ASIO::Audio Interface Input 1', name: 'Audio Interface Input 1', type: 'ASIO' },
@@ -292,12 +307,21 @@ class MockBridgeBackend {
       ];
       this.state.audio.sampleRateOptions = [44100, 48000, 96000];
       this.state.audio.bufferSizeOptions = [64, 128, 256, 512, 1024];
+      channelOptions = [
+        { id: '0', name: 'Out 1', index: 0 },
+        { id: '1', name: 'Out 2', index: 1 },
+        { id: '2', name: 'Out 3', index: 2 },
+        { id: '3', name: 'Out 4', index: 3 },
+      ];
     }
 
+    this.state.audio.outputChannelOptions = channelOptions;
     this.state.audio.inputDeviceId = this.state.audio.inputDevices[0]?.id ?? '';
     this.state.audio.outputDeviceId = this.state.audio.outputDevices[0]?.id ?? '';
     this.state.audio.inputDeviceName = this.state.audio.inputDevices[0]?.name ?? '';
     this.state.audio.outputDeviceName = this.state.audio.outputDevices[0]?.name ?? '';
+    this.state.audio.leftMonitorChannelId = channelOptions[0]?.id ?? '0';
+    this.state.audio.rightMonitorChannelId = channelOptions[1]?.id ?? channelOptions[0]?.id ?? '0';
     this.state.audio.sampleRate = this.state.audio.sampleRateOptions[0] ?? 44100;
     this.state.audio.bufferSize = this.state.audio.bufferSizeOptions[0] ?? 256;
   }

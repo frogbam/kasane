@@ -131,6 +131,8 @@ class Bridge {
           params?.outputDeviceId ?? '',
           params?.sampleRate ?? 0,
           params?.bufferSize ?? 0,
+          params?.leftMonitorChannelId ?? '',
+          params?.rightMonitorChannelId ?? '',
         ];
     }
   }

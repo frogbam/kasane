@@ -41,6 +41,8 @@
     "deviceType": "Device Type",
     "inputDevice": "Input Device",
     "outputDevice": "Output Device",
+    "leftMonitor": "Left Monitor",
+    "rightMonitor": "Right Monitor",
     "sampleRate": "Sample Rate",
     "bufferSize": "Buffer Size",
     "apply": "Apply",

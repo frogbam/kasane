@@ -7,6 +7,12 @@ export interface DeviceOption {
   type: string;
 }
 
+export interface ChannelOption {
+  id: string;
+  name: string;
+  index: number;
+}
+
 export interface AudioState {
   inputGainDb: number;
   outputGainDb: number;
@@ -16,6 +22,9 @@ export interface AudioState {
   outputDeviceId: string;
   inputDeviceName: string;
   outputDeviceName: string;
+  outputChannelOptions: ChannelOption[];
+  leftMonitorChannelId: string;
+  rightMonitorChannelId: string;
   bufferSize: number;
   sampleRate: number;
   inputDevices: DeviceOption[];
@@ -91,6 +100,8 @@ export type CommandParams = {
     outputDeviceId: string;
     sampleRate: number;
     bufferSize: number;
+    leftMonitorChannelId: string;
+    rightMonitorChannelId: string;
   };
 };
 

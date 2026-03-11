@@ -41,6 +41,8 @@
     "deviceType": "设备类型",
     "inputDevice": "输入设备",
     "outputDevice": "输出设备",
+    "leftMonitor": "左监听",
+    "rightMonitor": "右监听",
     "sampleRate": "采样率",
     "bufferSize": "缓冲区大小",
     "apply": "应用",

@@ -265,7 +265,9 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 completion(engine != nullptr ? engine->setAudioDeviceSetup(readStringArgument(args, 0),
                                                                                            readStringArgument(args, 1),
                                                                                            readDoubleArgument(args, 2),
-                                                                                           static_cast<int>(readDoubleArgument(args, 3)))
+                                                                                           static_cast<int>(readDoubleArgument(args, 3)),
+                                                                                           readStringArgument(args, 4),
+                                                                                           readStringArgument(args, 5))
                                                              : false);
                                 emitAudioState();
                                 emitErrorIfNeeded();

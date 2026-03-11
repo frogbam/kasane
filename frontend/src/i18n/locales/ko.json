@@ -41,6 +41,8 @@
     "deviceType": "디바이스 타입",
     "inputDevice": "입력 장치",
     "outputDevice": "출력 장치",
+    "leftMonitor": "왼쪽 모니터",
+    "rightMonitor": "오른쪽 모니터",
     "sampleRate": "샘플 레이트",
     "bufferSize": "버퍼 크기",
     "apply": "적용",

@@ -15,6 +15,13 @@ struct DeviceOption
     juce::String type;
 };
 
+struct ChannelOption
+{
+    juce::String id;
+    juce::String name;
+    int index = 0;
+};
+
 struct PluginDescriptor
 {
     juce::String id;
@@ -45,6 +52,9 @@ struct AudioState
     juce::String outputDeviceId;
     juce::String inputDeviceName;
     juce::String outputDeviceName;
+    std::vector<ChannelOption> outputChannelOptions;
+    juce::String leftMonitorChannelId;
+    juce::String rightMonitorChannelId;
     int bufferSize = 0;
     double sampleRate = 0.0;
     std::vector<DeviceOption> inputDevices;
@@ -87,6 +97,7 @@ struct AppState
 
 juce::String makeDeviceId(const juce::String& deviceType, const juce::String& deviceName);
 juce::var toVar(const DeviceOption& device);
+juce::var toVar(const ChannelOption& channel);
 juce::var toVar(const PluginDescriptor& plugin);
 juce::var toVar(const ChainSlot& slot);
 juce::var toVar(const AudioState& state);

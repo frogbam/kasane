@@ -19,6 +19,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const pendingOutputDevice = useSignal<string>(audio.value.outputDeviceId);
   const pendingSampleRate = useSignal<number>(audio.value.sampleRate);
   const pendingBufferSize = useSignal<number>(audio.value.bufferSize);
+  const pendingLeftMonitorChannel = useSignal<string>(audio.value.leftMonitorChannelId);
+  const pendingRightMonitorChannel = useSignal<string>(audio.value.rightMonitorChannelId);
 
   useEffect(() => {
     if (!isOpen) {
@@ -30,6 +32,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     pendingOutputDevice.value = audio.value.outputDeviceId;
     pendingSampleRate.value = audio.value.sampleRate;
     pendingBufferSize.value = audio.value.bufferSize;
+    pendingLeftMonitorChannel.value = audio.value.leftMonitorChannelId;
+    pendingRightMonitorChannel.value = audio.value.rightMonitorChannelId;
   }, [
     isOpen,
     audio.value.audioDeviceType,
@@ -37,11 +41,14 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     audio.value.outputDeviceId,
     audio.value.sampleRate,
     audio.value.bufferSize,
+    audio.value.leftMonitorChannelId,
+    audio.value.rightMonitorChannelId,
   ]);
 
   const availableDeviceTypes = audio.value.availableDeviceTypes;
   const inputDevices = audio.value.inputDevices;
   const outputDevices = audio.value.outputDevices;
+  const outputChannelOptions = audio.value.outputChannelOptions;
   const sampleRateOptions = audio.value.sampleRateOptions;
   const bufferSizeOptions = audio.value.bufferSizeOptions;
 
@@ -56,6 +63,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
       outputDeviceId: pendingOutputDevice.value,
       sampleRate: pendingSampleRate.value,
       bufferSize: pendingBufferSize.value,
+      leftMonitorChannelId: pendingLeftMonitorChannel.value,
+      rightMonitorChannelId: pendingRightMonitorChannel.value,
     });
     onClose();
   };
@@ -66,12 +75,16 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     pendingOutputDevice.value = audio.value.outputDeviceId;
     pendingSampleRate.value = audio.value.sampleRate;
     pendingBufferSize.value = audio.value.bufferSize;
+    pendingLeftMonitorChannel.value = audio.value.leftMonitorChannelId;
+    pendingRightMonitorChannel.value = audio.value.rightMonitorChannelId;
     onClose();
   };
 
   const deviceTypeOptions = availableDeviceTypes.map((type) => ({ value: type, label: type }));
   const inputDeviceOptions = inputDevices.map(d => ({ value: d.id, label: d.name }));
   const outputDeviceOptions = outputDevices.map(d => ({ value: d.id, label: d.name }));
+  const leftMonitorOptions = outputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
+  const rightMonitorOptions = outputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
   const sampleRateOpts = sampleRateOptions.map(sr => ({ value: String(sr), label: `${sr} ${t('settings.hz')}` }));
   const bufferSizeOpts = bufferSizeOptions.map(bs => ({ value: String(bs), label: `${bs} ${t('settings.samples')}` }));
 
@@ -103,6 +116,26 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
             onChange={(v) => { pendingOutputDevice.value = v; }}
             options={outputDeviceOptions}
           />
+        </div>
+
+        <div class="settings-overlay__row">
+          <div class="settings-overlay__field">
+            <Select
+              label={t('settings.leftMonitor')}
+              value={pendingLeftMonitorChannel.value}
+              onChange={(v) => { pendingLeftMonitorChannel.value = v; }}
+              options={leftMonitorOptions}
+            />
+          </div>
+
+          <div class="settings-overlay__field">
+            <Select
+              label={t('settings.rightMonitor')}
+              value={pendingRightMonitorChannel.value}
+              onChange={(v) => { pendingRightMonitorChannel.value = v; }}
+              options={rightMonitorOptions}
+            />
+          </div>
         </div>
 
         <div class="settings-overlay__row">
