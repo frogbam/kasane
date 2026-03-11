@@ -33,14 +33,13 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
 
   const handleBpmInput = (event: Event) => {
     const nextBpm = Number((event.currentTarget as HTMLInputElement).value);
-
     if (!Number.isNaN(nextBpm)) {
       bpm.value = nextBpm;
     }
   };
 
   const commitBpm = () => {
-    const nextBpm = Math.max(20, Math.min(300, Math.round(bpm.value || 120)));
+    const nextBpm = Math.max(0, Math.min(300, Math.round(bpm.value || 120)));
     bpm.value = nextBpm;
     bridge.emit('setBpm', { bpm: nextBpm });
   };
@@ -67,6 +66,53 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
           ))}
         </div>
 
+        <div class="header__bpm" aria-label={t('header.bpm')}>
+          <button
+            class="header__bpm-btn"
+            onClick={() => {
+              bpm.value = Math.max(0, bpm.value - 1);
+              bridge.emit('setBpm', { bpm: bpm.value });
+            }}
+            aria-label="Decrease BPM"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="5" x2="9" y2="5" />
+            </svg>
+          </button>
+          <div class="header__bpm-display">
+            <input
+              class="header__bpm-input"
+              type="number"
+              min="0"
+              max="300"
+              step="1"
+              value={String(bpm.value)}
+              onInput={handleBpmInput}
+              onBlur={commitBpm}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  commitBpm();
+                  (event.currentTarget as HTMLInputElement).blur();
+                }
+              }}
+            />
+            <span class="header__bpm-unit">{t('header.bpm')}</span>
+          </div>
+          <button
+            class="header__bpm-btn"
+            onClick={() => {
+              bpm.value = Math.min(300, bpm.value + 1);
+              bridge.emit('setBpm', { bpm: bpm.value });
+            }}
+            aria-label="Increase BPM"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="5" x2="9" y2="5" />
+              <line x1="5" y1="1" x2="5" y2="9" />
+            </svg>
+          </button>
+        </div>
+
         <button
           class="header__icon-btn"
           onClick={handleThemeToggle}
@@ -91,26 +137,6 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
             </svg>
           )}
         </button>
-
-        <label class="header__bpm" aria-label={t('header.bpm')}>
-          <span class="header__bpm-label">{t('header.bpm')}</span>
-          <input
-            class="header__bpm-input"
-            type="number"
-            min="20"
-            max="300"
-            step="1"
-            value={String(bpm.value)}
-            onInput={handleBpmInput}
-            onBlur={commitBpm}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                commitBpm();
-                (event.currentTarget as HTMLInputElement).blur();
-              }
-            }}
-          />
-        </label>
 
         <Button
           variant="ghost"

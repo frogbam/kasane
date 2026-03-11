@@ -105,30 +105,56 @@
 .header__bpm {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  height: 36px;
-  padding: 0 var(--space-sm);
   background-color: var(--bg-inset);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 36px;
 }
 
-.header__bpm-label {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
+.header__bpm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.header__bpm-btn:hover {
+  background-color: var(--bg-elevated);
+  color: var(--accent);
+}
+
+.header__bpm-btn:active {
+  background-color: var(--accent);
+  color: #000;
+}
+
+.header__bpm-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 0 var(--space-xs);
+  min-width: 72px;
+  justify-content: center;
 }
 
 .header__bpm-input {
-  width: 56px;
+  width: 40px;
   padding: 0;
   border: none;
   background: transparent;
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.875rem;
+  font-weight: 600;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .header__bpm-input:focus {
@@ -138,6 +164,19 @@
 .header__bpm-input::-webkit-outer-spin-button,
 .header__bpm-input::-webkit-inner-spin-button {
   margin: 0;
+  -webkit-appearance: none;
+}
+
+.header__bpm-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.header__bpm-unit {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .header__btn-content {
