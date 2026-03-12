@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Kasane VERSION 0.1.0 LANGUAGES CXX)
+project(kasane VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,7 +34,7 @@ add_custom_target(kasane_frontend_assets ALL
     COMMENT "Building Kasane frontend UI"
 )
 
-juce_add_gui_app(KasaneApp
+juce_add_gui_app(kasane
     PRODUCT_NAME "Kasane"
     COMPANY_NAME "Kasane Project"
     BUNDLE_ID com.kasane.app
@@ -42,7 +42,7 @@ juce_add_gui_app(KasaneApp
     NEEDS_WEBVIEW2 TRUE
 )
 
-target_sources(KasaneApp
+target_sources(kasane
     PRIVATE
         Source/AppState.cpp
         Source/AppState.h
@@ -53,7 +53,7 @@ target_sources(KasaneApp
         Source/MainComponent.h
 )
 
-target_compile_definitions(KasaneApp
+target_compile_definitions(kasane
     PRIVATE
         JUCE_WEB_BROWSER=1
         JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
@@ -69,7 +69,7 @@ target_compile_definitions(KasaneApp
         KASANE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(KasaneApp
+target_link_libraries(kasane
     PRIVATE
         juce::juce_audio_processors
         juce::juce_audio_utils
@@ -81,18 +81,18 @@ target_link_libraries(KasaneApp
 )
 
 if (MSVC)
-    target_link_options(KasaneApp PRIVATE "/MAP")
+    target_link_options(kasane PRIVATE "/MAP")
 endif()
 
-add_dependencies(KasaneApp kasane_frontend_assets)
+add_dependencies(kasane kasane_frontend_assets)
 
-juce_generate_juce_header(KasaneApp)
+juce_generate_juce_header(kasane)
 
 add_custom_command(
-    TARGET KasaneApp
+    TARGET kasane
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:KasaneApp>/frontend"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:kasane>/frontend"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${KASANE_FRONTEND_DIST_DIR}"
-            "$<TARGET_FILE_DIR:KasaneApp>/frontend"
+            "$<TARGET_FILE_DIR:kasane>/frontend"
 )

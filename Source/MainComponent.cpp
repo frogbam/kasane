@@ -131,7 +131,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                        .withWinWebView2Options(
                            juce::WebBrowserComponent::Options::WinWebView2{}
                                .withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory)
-                                                       .getChildFile("KasaneWebView2"))
+                                                       .getChildFile("kasane-webview2"))
                                .withStatusBarDisabled()
                                .withBuiltInErrorPageDisabled()
                                .withBackgroundColour(juce::Colour::fromRGB(15, 23, 42)))

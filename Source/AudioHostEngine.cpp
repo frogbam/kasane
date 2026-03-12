@@ -869,8 +869,8 @@ bool AudioHostEngine::scanForPlugins()
     statusMessage = "Scanning VST3 plug-ins...";
 
     auto deadMansPedal = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                             .getChildFile("Kasane")
-                             .getChildFile("KnownPlugins")
+                             .getChildFile("kasane")
+                             .getChildFile("known-plugins")
                              .getChildFile("deadmanspedal.txt");
 
     deadMansPedal.getParentDirectory().createDirectory();

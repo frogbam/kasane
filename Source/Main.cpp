@@ -19,9 +19,9 @@ public:
     void initialise(const juce::String&) override
     {
         juce::PropertiesFile::Options options;
-        options.applicationName = "Kasane";
+        options.applicationName = "kasane";
         options.filenameSuffix = "settings";
-        options.folderName = "Kasane";
+        options.folderName = "kasane";
         options.osxLibrarySubFolder = "Application Support";
         appProperties.setStorageParameters(options);
 
