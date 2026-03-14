@@ -42,6 +42,14 @@ juce_add_binary_data(kasane_frontend_data
         "${KASANE_FRONTEND_DIST_DIR}/index.html"
         "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
         "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-400.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-500.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-600.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-700.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-400.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-500.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-600.ttf"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-700.ttf"
 )
 
 add_dependencies(kasane_frontend_data kasane_frontend_assets)

@@ -5,8 +5,8 @@
 namespace
 {
 constexpr auto windowBoundsKey = "window.bounds";
-constexpr auto fixedWindowWidth = 900;
-constexpr auto fixedWindowHeight = 640;
+constexpr auto fixedWindowWidth = 1024;
+constexpr auto fixedWindowHeight = 768;
 }
 
 class KasaneApplication final : public juce::JUCEApplication

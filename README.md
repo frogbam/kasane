@@ -77,6 +77,7 @@ Kasane uses a number of third-party libraries, SDKs, and runtimes that carry the
 - WebView2 is used to host the desktop UI. The Microsoft WebView2 SDK and runtime are subject to Microsoft's license and distribution terms.
 - ASIO support is enabled in this project through JUCE. The relevant ASIO code remains subject to the Steinberg ASIO license terms distributed with JUCE.
 - The frontend uses Preact, `@preact/signals`, and Vite, which are licensed under the MIT license.
+- Kasane bundles the Inter and JetBrains Mono fonts, both licensed under the SIL Open Font License 1.1.
 - TypeScript is licensed under the Apache License 2.0.
 - User-installed audio plug-ins are not part of Kasane and remain subject to their own licenses.
 

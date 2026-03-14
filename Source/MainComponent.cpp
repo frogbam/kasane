@@ -102,15 +102,16 @@ juce::String normaliseEmbeddedResourcePath(const juce::String& path)
 const char* getEmbeddedResourceData(const juce::String& path, int& dataSize)
 {
     const auto relativePath = normaliseEmbeddedResourcePath(path);
+    const auto originalFileName = relativePath.fromLastOccurrenceOf("/", false, false);
 
     if (relativePath == "index.html")
         return KasaneFrontendData::getNamedResource("index_html", dataSize);
 
-    if (relativePath == "assets/app.js")
-        return KasaneFrontendData::getNamedResource("app_js", dataSize);
-
-    if (relativePath == "assets/app.css")
-        return KasaneFrontendData::getNamedResource("app_css", dataSize);
+    for (auto index = 0; index < KasaneFrontendData::namedResourceListSize; ++index)
+    {
+        if (originalFileName == KasaneFrontendData::originalFilenames[index])
+            return KasaneFrontendData::getNamedResource(KasaneFrontendData::namedResourceList[index], dataSize);
+    }
 
     dataSize = 0;
     return nullptr;
