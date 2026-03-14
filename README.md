@@ -66,6 +66,10 @@ After a successful Release build:
 build/kasane_artefacts/Release/Kasane.exe
 ```
 
+The Release executable embeds the frontend assets, so you do not need to ship a separate `frontend` folder alongside `Kasane.exe`.
+
+The target Windows machine still needs Microsoft Edge WebView2 Runtime installed in order to run the app.
+
 ## License
 
 Kasane is licensed under `AGPL-3.0-only`.
@@ -84,3 +88,4 @@ Kasane uses a number of third-party libraries, SDKs, and runtimes that carry the
 VST is a trademark of Steinberg Media Technologies GmbH.
 
 See [LICENSE](./LICENSE) for the full license text.
+See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for bundled third-party notices.

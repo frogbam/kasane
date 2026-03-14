@@ -30,6 +30,14 @@ juce::String getMimeTypeForPath(const juce::String& path)
         return "image/png";
     if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg"))
         return "image/jpeg";
+    if (lowerPath.endsWith(".ttf"))
+        return "font/ttf";
+    if (lowerPath.endsWith(".otf"))
+        return "font/otf";
+    if (lowerPath.endsWith(".woff"))
+        return "font/woff";
+    if (lowerPath.endsWith(".woff2"))
+        return "font/woff2";
 
     return "application/octet-stream";
 }

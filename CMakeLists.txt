@@ -23,33 +23,64 @@ find_program(NPM_EXECUTABLE npm REQUIRED)
 
 set(KASANE_FRONTEND_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/frontend")
 set(KASANE_FRONTEND_DIST_DIR "${KASANE_FRONTEND_SOURCE_DIR}/dist")
+set(KASANE_FRONTEND_NPM_STAMP "${CMAKE_CURRENT_BINARY_DIR}/kasane_frontend_npm_install.stamp")
+set(KASANE_FRONTEND_EMBEDDED_ASSETS
+    "${KASANE_FRONTEND_DIST_DIR}/index.html"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-400.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-500.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-600.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-700.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-400.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-500.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-600.ttf"
+    "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-700.ttf"
+)
 
-add_custom_target(kasane_frontend_assets ALL
+file(GLOB_RECURSE KASANE_FRONTEND_BUILD_INPUTS CONFIGURE_DEPENDS
+    "${KASANE_FRONTEND_SOURCE_DIR}/index.html"
+    "${KASANE_FRONTEND_SOURCE_DIR}/src/*"
+    "${KASANE_FRONTEND_SOURCE_DIR}/package.json"
+    "${KASANE_FRONTEND_SOURCE_DIR}/package-lock.json"
+    "${KASANE_FRONTEND_SOURCE_DIR}/tsconfig.json"
+    "${KASANE_FRONTEND_SOURCE_DIR}/vite.config.ts"
+)
+
+add_custom_command(
+    OUTPUT "${KASANE_FRONTEND_NPM_STAMP}"
     COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_FRONTEND_SOURCE_DIR}" cmd /c npm ci
+    COMMAND ${CMAKE_COMMAND} -E touch "${KASANE_FRONTEND_NPM_STAMP}"
+    DEPENDS
+        "${KASANE_FRONTEND_SOURCE_DIR}/package.json"
+        "${KASANE_FRONTEND_SOURCE_DIR}/package-lock.json"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMENT "Installing Kasane frontend dependencies"
+)
+
+add_custom_target(kasane_frontend_deps
+    DEPENDS "${KASANE_FRONTEND_NPM_STAMP}"
+)
+
+add_custom_command(
+    OUTPUT ${KASANE_FRONTEND_EMBEDDED_ASSETS}
     COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_FRONTEND_SOURCE_DIR}" cmd /c npm run build
-    BYPRODUCTS
-        "${KASANE_FRONTEND_DIST_DIR}/index.html"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
+    DEPENDS
+        kasane_frontend_deps
+        ${KASANE_FRONTEND_BUILD_INPUTS}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Building Kasane frontend UI"
+)
+
+add_custom_target(kasane_frontend_assets ALL
+    DEPENDS ${KASANE_FRONTEND_EMBEDDED_ASSETS}
 )
 
 juce_add_binary_data(kasane_frontend_data
     NAMESPACE KasaneFrontendData
     HEADER_NAME KasaneFrontendData.h
     SOURCES
-        "${KASANE_FRONTEND_DIST_DIR}/index.html"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-400.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-500.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-600.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/Inter-700.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-400.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-500.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-600.ttf"
-        "${KASANE_FRONTEND_DIST_DIR}/assets/JetBrainsMono-700.ttf"
+        ${KASANE_FRONTEND_EMBEDDED_ASSETS}
 )
 
 add_dependencies(kasane_frontend_data kasane_frontend_assets)
