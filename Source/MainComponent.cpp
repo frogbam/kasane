@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 
 #include "AppState.h"
+#include "KasaneFrontendData.h"
 
 #include <cstddef>
 #include <cstring>
@@ -10,23 +11,24 @@ namespace kasane
 {
 namespace
 {
-juce::String getMimeTypeForFile(const juce::File& file)
+juce::String getMimeTypeForPath(const juce::String& path)
 {
-    const auto extension = file.getFileExtension().toLowerCase();
+    const auto trimmedPath = path.trim();
+    const auto lowerPath = trimmedPath.toLowerCase();
 
-    if (extension == ".html")
+    if (lowerPath.endsWith(".html"))
         return "text/html";
-    if (extension == ".css")
+    if (lowerPath.endsWith(".css"))
         return "text/css";
-    if (extension == ".js")
+    if (lowerPath.endsWith(".js"))
         return "application/javascript";
-    if (extension == ".json")
+    if (lowerPath.endsWith(".json"))
         return "application/json";
-    if (extension == ".svg")
+    if (lowerPath.endsWith(".svg"))
         return "image/svg+xml";
-    if (extension == ".png")
+    if (lowerPath.endsWith(".png"))
         return "image/png";
-    if (extension == ".jpg" || extension == ".jpeg")
+    if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg"))
         return "image/jpeg";
 
     return "application/octet-stream";
@@ -65,6 +67,54 @@ bool readBoolArgument(const juce::Array<juce::var>& arguments, int index, bool f
 
     return fallback;
 }
+
+juce::String normaliseEmbeddedResourcePath(const juce::String& path)
+{
+    auto relativePath = path.trim();
+
+    if (relativePath.isEmpty() || relativePath == "/")
+        relativePath = "index.html";
+    else
+    {
+        const auto queryIndex = relativePath.indexOfChar('?');
+        const auto hashIndex = relativePath.indexOfChar('#');
+        auto truncateIndex = -1;
+
+        if (queryIndex >= 0)
+            truncateIndex = queryIndex;
+
+        if (hashIndex >= 0)
+            truncateIndex = truncateIndex >= 0 ? juce::jmin(truncateIndex, hashIndex) : hashIndex;
+
+        if (truncateIndex >= 0)
+            relativePath = relativePath.substring(0, truncateIndex);
+
+        while (relativePath.startsWith("./"))
+            relativePath = relativePath.substring(2);
+
+        if (relativePath.startsWithChar('/'))
+            relativePath = relativePath.substring(1);
+    }
+
+    return relativePath;
+}
+
+const char* getEmbeddedResourceData(const juce::String& path, int& dataSize)
+{
+    const auto relativePath = normaliseEmbeddedResourcePath(path);
+
+    if (relativePath == "index.html")
+        return KasaneFrontendData::getNamedResource("index_html", dataSize);
+
+    if (relativePath == "assets/app.js")
+        return KasaneFrontendData::getNamedResource("app_js", dataSize);
+
+    if (relativePath == "assets/app.css")
+        return KasaneFrontendData::getNamedResource("app_css", dataSize);
+
+    dataSize = 0;
+    return nullptr;
+}
 } // namespace
 
 MainComponent::MainComponent(juce::ApplicationProperties& properties)
@@ -88,12 +138,11 @@ void MainComponent::initialiseAsync()
     juce::MessageManager::callAsync([this]
     {
         engine = std::make_unique<AudioHostEngine>(appProperties);
-        webRoot = findWebRoot();
         fallbackLabel.setText(getStartupErrorMessage(), juce::dontSendNotification);
 
         const auto options = createBrowserOptions();
 
-        if (webRoot.isDirectory() && juce::WebBrowserComponent::areOptionsSupported(options))
+        if (juce::WebBrowserComponent::areOptionsSupported(options))
         {
             webView = std::make_unique<juce::WebBrowserComponent>(options);
             addAndMakeVisible(*webView);
@@ -297,64 +346,29 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
 
 std::optional<MainComponent::Resource> MainComponent::getResource(const juce::String& path) const
 {
-    const auto file = resolveResourceFile(path);
+    const auto normalisedPath = normaliseEmbeddedResourcePath(path);
+    auto dataSize = 0;
+    const auto* data = getEmbeddedResourceData(normalisedPath, dataSize);
 
-    if (!file.existsAsFile())
+    if (data == nullptr || dataSize <= 0)
         return std::nullopt;
 
-    juce::MemoryBlock bytes;
-
-    if (!file.loadFileAsData(bytes))
-        return std::nullopt;
-
-    return Resource { toByteVector(bytes), getMimeTypeForFile(file) };
+    juce::MemoryBlock bytes { data, static_cast<size_t>(dataSize) };
+    return Resource { toByteVector(bytes), getMimeTypeForPath(normalisedPath) };
 }
 
 juce::String MainComponent::getStartupErrorMessage() const
 {
     const auto options = const_cast<MainComponent*>(this)->createBrowserOptions();
+    auto dataSize = 0;
 
-    if (!webRoot.isDirectory())
-        return "Kasane frontend assets were not found. Build the Vite frontend before launching the app.";
+    if (getEmbeddedResourceData("/", dataSize) == nullptr || dataSize <= 0)
+        return "Kasane frontend assets were not embedded correctly. Rebuild the app.";
 
     if (!juce::WebBrowserComponent::areOptionsSupported(options))
         return "The WebView2 backend is unavailable. Rebuild with WebView2 support enabled.";
 
     return {};
-}
-
-juce::File MainComponent::findWebRoot() const
-{
-    const auto executableFolder = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory();
-    const auto bundledWebRoot = executableFolder.getChildFile("frontend");
-
-    if (bundledWebRoot.isDirectory())
-        return bundledWebRoot;
-
-   #ifdef KASANE_SOURCE_DIR
-    const juce::File sourceRoot { juce::String { KASANE_SOURCE_DIR }.unquoted() };
-    const auto distRoot = sourceRoot.getChildFile("frontend").getChildFile("dist");
-
-    if (distRoot.isDirectory())
-        return distRoot;
-   #endif
-
-    return bundledWebRoot;
-}
-
-juce::File MainComponent::resolveResourceFile(const juce::String& path) const
-{
-    const auto trimmedPath = path.trim();
-
-    if (trimmedPath.isEmpty() || trimmedPath == "/")
-        return webRoot.getChildFile("index.html");
-
-    const auto relativePath = trimmedPath.startsWithChar('/') ? trimmedPath.substring(1) : trimmedPath;
-
-    if (relativePath.contains(".."))
-        return {};
-
-    return webRoot.getChildFile(relativePath);
 }
 
 void MainComponent::timerCallback()

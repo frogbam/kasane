@@ -29,10 +29,22 @@ add_custom_target(kasane_frontend_assets ALL
     COMMAND ${CMAKE_COMMAND} -E chdir "${KASANE_FRONTEND_SOURCE_DIR}" cmd /c npm run build
     BYPRODUCTS
         "${KASANE_FRONTEND_DIST_DIR}/index.html"
-        "${KASANE_FRONTEND_DIST_DIR}/assets"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Building Kasane frontend UI"
 )
+
+juce_add_binary_data(kasane_frontend_data
+    NAMESPACE KasaneFrontendData
+    HEADER_NAME KasaneFrontendData.h
+    SOURCES
+        "${KASANE_FRONTEND_DIST_DIR}/index.html"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/app.js"
+        "${KASANE_FRONTEND_DIST_DIR}/assets/app.css"
+)
+
+add_dependencies(kasane_frontend_data kasane_frontend_assets)
 
 juce_add_gui_app(kasane
     PRODUCT_NAME "Kasane"
@@ -68,11 +80,11 @@ target_compile_definitions(kasane
         JUCE_PLUGINHOST_LADSPA=0
         JUCE_PLUGINHOST_LV2=0
         JUCE_PLUGINHOST_VST=0
-        KASANE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries(kasane
     PRIVATE
+        kasane_frontend_data
         juce::juce_audio_processors
         juce::juce_audio_utils
         juce::juce_dsp
@@ -86,15 +98,6 @@ if (MSVC)
     target_link_options(kasane PRIVATE "/MAP")
 endif()
 
-add_dependencies(kasane kasane_frontend_assets)
+add_dependencies(kasane kasane_frontend_assets kasane_frontend_data)
 
 juce_generate_juce_header(kasane)
-
-add_custom_command(
-    TARGET kasane
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:kasane>/frontend"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${KASANE_FRONTEND_DIST_DIR}"
-            "$<TARGET_FILE_DIR:kasane>/frontend"
-)

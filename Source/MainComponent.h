@@ -27,8 +27,6 @@ private:
     juce::WebBrowserComponent::Options createBrowserOptions();
     std::optional<Resource> getResource(const juce::String& path) const;
     juce::String getStartupErrorMessage() const;
-    juce::File findWebRoot() const;
-    juce::File resolveResourceFile(const juce::String& path) const;
 
     void timerCallback() override;
     void emitBootstrapState();
@@ -43,7 +41,6 @@ private:
     std::unique_ptr<AudioHostEngine> engine;
     std::unique_ptr<juce::WebBrowserComponent> webView;
     juce::Label fallbackLabel;
-    juce::File webRoot;
     bool browserReady = false;
     bool initialised = false;
 
