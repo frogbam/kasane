@@ -26,22 +26,13 @@ Kasane is for the shorter path.
 
 ## Features
 
-- Standalone guitar practice rig for Windows
+- Standalone guitar amp and effects host for Windows
 - VST3 amp sim and effect hosting
 - Fast audio device setup
 - Input/output gain control and live meters
 - Drag-and-drop plug-in chain
 - Native plug-in editor windows
-- Built-in tuner
 - English, Korean, Japanese, and Simplified Chinese UI
-
-
-## Current Scope
-
-- Windows
-- Standalone app
-- VST3 only
-- Live guitar monitoring
 
 Kasane is not trying to be a DAW, recorder, or multitrack production tool.
 
@@ -66,9 +57,11 @@ After a successful Release build:
 build/kasane_artefacts/Release/Kasane.exe
 ```
 
-The Release executable embeds the frontend assets, so you do not need to ship a separate `frontend` folder alongside `Kasane.exe`.
+## About the Name
+Kasane comes from the Japanese word 重ね (kasane), meaning “layering” or “stacking.”
 
-The target Windows machine still needs Microsoft Edge WebView2 Runtime installed in order to run the app.
+The name reflects the way Kasane is meant to be used: building a playable guitar sound by stacking amp sims and effects into a simple signal chain.
+
 
 ## License
 
