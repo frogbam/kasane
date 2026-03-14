@@ -38,11 +38,11 @@ Kasane is not trying to be a DAW, recorder, or multitrack production tool.
 
 ## Installation
 
-### Download a release
-
 Download `Kasane.exe` from the [Releases](https://github.com/frogbam/kasane/releases/latest) page.
 
-### Building from source
+<details>
+  <summary>Building from source</summary>
+
 What you need:
 
 - Microsoft Edge WebView2 Runtime
@@ -60,6 +60,8 @@ After a successful Release build:
 ```text
 build/kasane_artefacts/Release/Kasane.exe
 ```
+
+</details>
 
 ## About the Name
 Kasane comes from the Japanese word 重ね (kasane), meaning “layering” or “stacking.”
