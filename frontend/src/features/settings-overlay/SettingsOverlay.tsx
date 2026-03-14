@@ -20,6 +20,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const pendingOutputDevice = useSignal<string>(audio.value.outputDeviceId);
   const pendingSampleRate = useSignal<number>(audio.value.sampleRate);
   const pendingBufferSize = useSignal<number>(audio.value.bufferSize);
+  const pendingLeftInputChannel = useSignal<string>(audio.value.leftInputChannelId);
+  const pendingRightInputChannel = useSignal<string>(audio.value.rightInputChannelId);
   const pendingLeftMonitorChannel = useSignal<string>(audio.value.leftMonitorChannelId);
   const pendingRightMonitorChannel = useSignal<string>(audio.value.rightMonitorChannelId);
   const previewAudio = useSignal<AudioState>(audio.value);
@@ -35,6 +37,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     pendingOutputDevice.value = audio.value.outputDeviceId;
     pendingSampleRate.value = audio.value.sampleRate;
     pendingBufferSize.value = audio.value.bufferSize;
+    pendingLeftInputChannel.value = audio.value.leftInputChannelId;
+    pendingRightInputChannel.value = audio.value.rightInputChannelId;
     pendingLeftMonitorChannel.value = audio.value.leftMonitorChannelId;
     pendingRightMonitorChannel.value = audio.value.rightMonitorChannelId;
   }, [
@@ -44,6 +48,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     audio.value.outputDeviceId,
     audio.value.sampleRate,
     audio.value.bufferSize,
+    audio.value.leftInputChannelId,
+    audio.value.rightInputChannelId,
     audio.value.leftMonitorChannelId,
     audio.value.rightMonitorChannelId,
   ]);
@@ -51,6 +57,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const availableDeviceTypes = previewAudio.value.availableDeviceTypes;
   const inputDevices = previewAudio.value.inputDevices;
   const outputDevices = previewAudio.value.outputDevices;
+  const inputChannelOptions = previewAudio.value.inputChannelOptions;
   const outputChannelOptions = previewAudio.value.outputChannelOptions;
   const sampleRateOptions = previewAudio.value.sampleRateOptions;
   const bufferSizeOptions = previewAudio.value.bufferSizeOptions;
@@ -70,6 +77,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     pendingOutputDevice.value = preview.outputDeviceId;
     pendingSampleRate.value = preview.sampleRate;
     pendingBufferSize.value = preview.bufferSize;
+    pendingLeftInputChannel.value = preview.leftInputChannelId;
+    pendingRightInputChannel.value = preview.rightInputChannelId;
     pendingLeftMonitorChannel.value = preview.leftMonitorChannelId;
     pendingRightMonitorChannel.value = preview.rightMonitorChannelId;
   };
@@ -85,6 +94,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
       outputDeviceId: pendingOutputDevice.value,
       sampleRate: pendingSampleRate.value,
       bufferSize: pendingBufferSize.value,
+      leftInputChannelId: pendingLeftInputChannel.value,
+      rightInputChannelId: pendingRightInputChannel.value,
       leftMonitorChannelId: pendingLeftMonitorChannel.value,
       rightMonitorChannelId: pendingRightMonitorChannel.value,
     });
@@ -97,6 +108,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     pendingOutputDevice.value = audio.value.outputDeviceId;
     pendingSampleRate.value = audio.value.sampleRate;
     pendingBufferSize.value = audio.value.bufferSize;
+    pendingLeftInputChannel.value = audio.value.leftInputChannelId;
+    pendingRightInputChannel.value = audio.value.rightInputChannelId;
     pendingLeftMonitorChannel.value = audio.value.leftMonitorChannelId;
     pendingRightMonitorChannel.value = audio.value.rightMonitorChannelId;
     onClose();
@@ -105,6 +118,8 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const deviceTypeOptions = availableDeviceTypes.map((type) => ({ value: type, label: type }));
   const inputDeviceOptions = inputDevices.map(d => ({ value: d.id, label: d.name }));
   const outputDeviceOptions = outputDevices.map(d => ({ value: d.id, label: d.name }));
+  const leftInputOptions = inputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
+  const rightInputOptions = inputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
   const leftMonitorOptions = outputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
   const rightMonitorOptions = outputChannelOptions.map((channel) => ({ value: channel.id, label: channel.name }));
   const sampleRateOpts = sampleRateOptions.map(sr => ({ value: String(sr), label: `${sr} ${t('settings.hz')}` }));
@@ -129,6 +144,26 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
             onChange={(v) => { void refreshPreview(v, ''); }}
             options={inputDeviceOptions}
           />
+        </div>
+
+        <div class="settings-overlay__row">
+          <div class="settings-overlay__field">
+            <Select
+              label={t('settings.leftInput')}
+              value={pendingLeftInputChannel.value}
+              onChange={(v) => { pendingLeftInputChannel.value = v; }}
+              options={leftInputOptions}
+            />
+          </div>
+
+          <div class="settings-overlay__field">
+            <Select
+              label={t('settings.rightInput')}
+              value={pendingRightInputChannel.value}
+              onChange={(v) => { pendingRightInputChannel.value = v; }}
+              options={rightInputOptions}
+            />
+          </div>
         </div>
 
         <div class="settings-overlay__section">

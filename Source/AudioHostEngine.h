@@ -87,6 +87,8 @@ public:
                              const juce::String& outputDeviceId,
                              double sampleRate,
                              int bufferSize,
+                             const juce::String& leftInputChannelId,
+                             const juce::String& rightInputChannelId,
                              const juce::String& leftMonitorChannelId,
                              const juce::String& rightMonitorChannelId);
 
@@ -121,6 +123,7 @@ private:
     void restoreHostedPluginsFromState();
     void refreshDeviceLists();
     void updateDeviceOptionsForType(const juce::String& deviceType);
+    void refreshInputChannelSelection();
     void refreshMonitorChannelSelection();
     void persistState() const;
     void restoreState();
@@ -154,6 +157,7 @@ private:
     std::vector<juce::String> availableDeviceTypes;
     std::vector<DeviceOption> inputDevices;
     std::vector<DeviceOption> outputDevices;
+    std::vector<ChannelOption> inputChannelOptions;
     std::vector<ChannelOption> outputChannelOptions;
     std::vector<int> bufferSizeOptions;
     std::vector<double> sampleRateOptions;
@@ -174,6 +178,8 @@ private:
     std::atomic<float> inputRightDb { -100.0f };
     std::atomic<float> outputLeftDb { -100.0f };
     std::atomic<float> outputRightDb { -100.0f };
+    std::atomic<int> leftInputChannelIndex { 0 };
+    std::atomic<int> rightInputChannelIndex { 1 };
     std::atomic<int> leftMonitorChannelIndex { 0 };
     std::atomic<int> rightMonitorChannelIndex { 1 };
     std::atomic<float> tunerFrequencyHz { 0.0f };

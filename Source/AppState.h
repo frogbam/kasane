@@ -52,6 +52,9 @@ struct AudioState
     juce::String outputDeviceId;
     juce::String inputDeviceName;
     juce::String outputDeviceName;
+    std::vector<ChannelOption> inputChannelOptions;
+    juce::String leftInputChannelId;
+    juce::String rightInputChannelId;
     std::vector<ChannelOption> outputChannelOptions;
     juce::String leftMonitorChannelId;
     juce::String rightMonitorChannelId;

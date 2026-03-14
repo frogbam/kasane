@@ -79,6 +79,9 @@ juce::var toVar(const AudioState& state)
     object->setProperty("outputDeviceId", state.outputDeviceId);
     object->setProperty("inputDeviceName", state.inputDeviceName);
     object->setProperty("outputDeviceName", state.outputDeviceName);
+    object->setProperty("inputChannelOptions", makeArray(state.inputChannelOptions, [] (const auto& channel) { return toVar(channel); }));
+    object->setProperty("leftInputChannelId", state.leftInputChannelId);
+    object->setProperty("rightInputChannelId", state.rightInputChannelId);
     object->setProperty("outputChannelOptions", makeArray(state.outputChannelOptions, [] (const auto& channel) { return toVar(channel); }));
     object->setProperty("leftMonitorChannelId", state.leftMonitorChannelId);
     object->setProperty("rightMonitorChannelId", state.rightMonitorChannelId);

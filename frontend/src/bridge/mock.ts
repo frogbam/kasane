@@ -29,6 +29,14 @@ const mockAudioState: AudioState = {
   outputDeviceId: 'ASIO::Audio Interface Output 1',
   inputDeviceName: 'Audio Interface Input 1',
   outputDeviceName: 'Audio Interface Output 1',
+  inputChannelOptions: [
+    { id: '0', name: 'In 1', index: 0 },
+    { id: '1', name: 'In 2', index: 1 },
+    { id: '2', name: 'In 3', index: 2 },
+    { id: '3', name: 'In 4', index: 3 },
+  ],
+  leftInputChannelId: '0',
+  rightInputChannelId: '1',
   outputChannelOptions: [
     { id: '0', name: 'Out 1', index: 0 },
     { id: '1', name: 'Out 2', index: 1 },
@@ -241,8 +249,10 @@ class MockBridgeBackend {
         this.state.audio.outputDeviceId = this.readStringArg(payload, 1);
         this.state.audio.sampleRate = this.readNumberArg(payload, 2);
         this.state.audio.bufferSize = this.readNumberArg(payload, 3);
-        this.state.audio.leftMonitorChannelId = this.readStringArg(payload, 4);
-        this.state.audio.rightMonitorChannelId = this.readStringArg(payload, 5);
+        this.state.audio.leftInputChannelId = this.readStringArg(payload, 4);
+        this.state.audio.rightInputChannelId = this.readStringArg(payload, 5);
+        this.state.audio.leftMonitorChannelId = this.readStringArg(payload, 6);
+        this.state.audio.rightMonitorChannelId = this.readStringArg(payload, 7);
         this.state.audio.inputDeviceName = this.state.audio.inputDevices.find((device) => device.id === this.state.audio.inputDeviceId)?.name ?? '';
         this.state.audio.outputDeviceName = this.state.audio.outputDevices.find((device) => device.id === this.state.audio.outputDeviceId)?.name ?? '';
         this.emit('audioStateChanged', this.state.audio);
@@ -301,6 +311,10 @@ class MockBridgeBackend {
       ];
       this.state.audio.sampleRateOptions = [44100, 48000];
       this.state.audio.bufferSizeOptions = [128, 256, 512, 1024];
+      this.state.audio.inputChannelOptions = [
+        { id: '0', name: 'Input 1', index: 0 },
+        { id: '1', name: 'Input 2', index: 1 },
+      ];
       channelOptions = [
         { id: '0', name: 'Speaker 1', index: 0 },
         { id: '1', name: 'Speaker 2', index: 1 },
@@ -316,6 +330,12 @@ class MockBridgeBackend {
       ];
       this.state.audio.sampleRateOptions = [44100, 48000, 96000];
       this.state.audio.bufferSizeOptions = [64, 128, 256, 512, 1024];
+      this.state.audio.inputChannelOptions = [
+        { id: '0', name: 'In 1', index: 0 },
+        { id: '1', name: 'In 2', index: 1 },
+        { id: '2', name: 'In 3', index: 2 },
+        { id: '3', name: 'In 4', index: 3 },
+      ];
       channelOptions = [
         { id: '0', name: 'Out 1', index: 0 },
         { id: '1', name: 'Out 2', index: 1 },
@@ -329,6 +349,8 @@ class MockBridgeBackend {
     this.state.audio.outputDeviceId = this.state.audio.outputDevices[0]?.id ?? '';
     this.state.audio.inputDeviceName = this.state.audio.inputDevices[0]?.name ?? '';
     this.state.audio.outputDeviceName = this.state.audio.outputDevices[0]?.name ?? '';
+    this.state.audio.leftInputChannelId = this.state.audio.inputChannelOptions[0]?.id ?? '0';
+    this.state.audio.rightInputChannelId = this.state.audio.inputChannelOptions[1]?.id ?? this.state.audio.inputChannelOptions[0]?.id ?? '0';
     this.state.audio.leftMonitorChannelId = channelOptions[0]?.id ?? '0';
     this.state.audio.rightMonitorChannelId = channelOptions[1]?.id ?? channelOptions[0]?.id ?? '0';
     this.state.audio.sampleRate = this.state.audio.sampleRateOptions[0] ?? 44100;
@@ -342,6 +364,17 @@ class MockBridgeBackend {
     preview.outputDeviceId = outputDeviceId || preview.outputDeviceId;
     preview.inputDeviceName = preview.inputDevices.find((device) => device.id === preview.inputDeviceId)?.name ?? preview.inputDeviceName;
     preview.outputDeviceName = preview.outputDevices.find((device) => device.id === preview.outputDeviceId)?.name ?? preview.outputDeviceName;
+    preview.inputChannelOptions = preview.inputDeviceId.endsWith('Input 2')
+      ? [
+          { id: '2', name: 'In 3', index: 2 },
+          { id: '3', name: 'In 4', index: 3 },
+        ]
+      : [
+          { id: '0', name: 'In 1', index: 0 },
+          { id: '1', name: 'In 2', index: 1 },
+        ];
+    preview.leftInputChannelId = preview.inputChannelOptions[0]?.id ?? '0';
+    preview.rightInputChannelId = preview.inputChannelOptions[1]?.id ?? preview.inputChannelOptions[0]?.id ?? '0';
 
     if (preview.outputDeviceId.endsWith('Output 2')) {
       preview.outputChannelOptions = [

@@ -284,7 +284,9 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                                                                            readDoubleArgument(args, 2),
                                                                                            static_cast<int>(readDoubleArgument(args, 3)),
                                                                                            readStringArgument(args, 4),
-                                                                                           readStringArgument(args, 5))
+                                                                                           readStringArgument(args, 5),
+                                                                                           readStringArgument(args, 6),
+                                                                                           readStringArgument(args, 7))
                                                              : false);
                                 emitAudioState();
                                 emitErrorIfNeeded();

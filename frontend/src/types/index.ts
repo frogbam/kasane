@@ -22,6 +22,9 @@ export interface AudioState {
   outputDeviceId: string;
   inputDeviceName: string;
   outputDeviceName: string;
+  inputChannelOptions: ChannelOption[];
+  leftInputChannelId: string;
+  rightInputChannelId: string;
   outputChannelOptions: ChannelOption[];
   leftMonitorChannelId: string;
   rightMonitorChannelId: string;
@@ -106,6 +109,8 @@ export type CommandParams = {
     outputDeviceId: string;
     sampleRate: number;
     bufferSize: number;
+    leftInputChannelId: string;
+    rightInputChannelId: string;
     leftMonitorChannelId: string;
     rightMonitorChannelId: string;
   };
