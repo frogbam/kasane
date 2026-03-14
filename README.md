@@ -36,7 +36,11 @@ Kasane is for the shorter path.
 
 Kasane is not trying to be a DAW, recorder, or multitrack production tool.
 
-## Building and Installation
+## Installation
+
+### Download a release
+
+Download `Kasane.exe` from the [Releases](https://github.com/frogbam/kasane/releases/latest) page.
 
 ### Building from source
 What you need:
