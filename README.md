@@ -1,14 +1,8 @@
 # Kasane
 
-> Plug in. Load your tone. Start playing.
+> A fast, lightweight guitar amp and FX plugin host for instant playing without a DAW.
 
-<div align="center">
-  <br><br><br><br><br><br><br><br>
-  <strong>Main app screenshot goes here</strong>
-  <br>
-  <sub>Suggested image: full app window with plug-in chain, meters, and tuner visible</sub>
-  <br><br><br><br><br><br><br><br>
-</div>
+![Kasane](./docs/images/main_light.png)
 
 Kasane is a lightweight Windows app for guitar players who want to hear their sound immediately without opening a full DAW.
 
@@ -24,12 +18,7 @@ If your usual flow is:
 - set monitoring again
 - add amp sim and pedals again
 
-Kasane is built for the shorter path.
-
-Open the app, choose your audio device, load your VST3 amp and effects, and play.
-
-It is a good fit if you want a simple practice rig on your PC instead of a full recording workflow.
-
+Kasane is for the shorter path.
 
 ## Features
 

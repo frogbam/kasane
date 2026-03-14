@@ -144,7 +144,7 @@ export function App() {
 
   return (
     <div class="app-layout" data-theme={themeSignal.value}>
-      <Header onOpenSettings={handleOpenSettings} onOpenTuner={handleOpenTuner} />
+      <Header onOpenSettings={handleOpenSettings} />
       <main class="main-content">
         <ChainView onAddPlugin={handleOpenPluginPicker} />
       </main>

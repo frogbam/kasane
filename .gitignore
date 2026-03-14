@@ -1,8 +1,8 @@
 build/
-docs/
 web/node_modules/
 web/dist/
 frontend/node_modules/
 frontend/dist/
 _juce_ref/
 *.map
+todo.md

@@ -14,10 +14,9 @@ const languageOptions = [
 
 interface HeaderProps {
   onOpenSettings: () => void;
-  onOpenTuner: () => void;
 }
 
-export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
+export function Header({ onOpenSettings }: HeaderProps) {
   const { t } = useTranslation();
 
   const handleLanguageChange = (lang: Language) => {
@@ -138,20 +137,6 @@ export function Header({ onOpenSettings, onOpenTuner }: HeaderProps) {
             </svg>
           )}
         </button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onOpenTuner}
-          ariaLabel={t('header.tuner')}
-        >
-          <span class="header__btn-content">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 7l-5-5-5 5M17 17l-5 5-5-5M2 12h20M7 7l-5 5 5 5M17 7l5 5-5 5" />
-            </svg>
-            <span>{t('header.tuner')}</span>
-          </span>
-        </Button>
 
         <Button
           variant="ghost"

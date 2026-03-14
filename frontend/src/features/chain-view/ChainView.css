@@ -243,12 +243,15 @@
   justify-content: center;
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   background-color: var(--bg-elevated);
   border: 2px dashed var(--border);
   border-radius: 50%;
   color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .chain-add-btn:hover {

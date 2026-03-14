@@ -112,7 +112,7 @@ export function ChainView({ onAddPlugin }: ChainViewProps) {
               <div class="chain-slot__info">
                 <div class="chain-slot__name">{slot.name}</div>
                 <div class="chain-slot__meta">
-                  {slot.manufacturer} • {slot.category}
+                  {slot.manufacturer}
                 </div>
               </div>
               <div class={`chain-slot__status ${slot.bypassed ? 'chain-slot__status--bypassed' : 'chain-slot__status--active'}`}>
