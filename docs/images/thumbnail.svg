@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <filter id="drop-shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+    <filter id="glow-yellow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <pattern id="grill" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#44392e"/>
+      <rect width="3" height="3" fill="#241e18"/>
+      <rect x="3" y="3" width="3" height="3" fill="#241e18"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="400" height="400" rx="80" fill="#1b1c1d"/>
+
+  <g transform="translate(-40, -32) scale(1.2)">
+    
+    <rect x="140" y="80" width="10" height="190" fill="#262729"/>
+    <rect x="250" y="80" width="10" height="190" fill="#262729"/>
+
+    <g filter="url(#drop-shadow)">
+      <rect x="110" y="40" width="180" height="74" rx="4" fill="#6e5c4a"/>
+      <rect x="108" y="38" width="8" height="8" rx="2" fill="#9f9282"/>
+      <rect x="284" y="38" width="8" height="8" rx="2" fill="#9f9282"/>
+      <rect x="108" y="108" width="8" height="8" rx="2" fill="#9f9282"/>
+      <rect x="284" y="108" width="8" height="8" rx="2" fill="#9f9282"/>
+      
+      <rect x="116" y="48" width="168" height="34" rx="3" fill="url(#grill)"/>
+      <rect x="116" y="48" width="168" height="34" rx="3" fill="none" stroke="#332a21" stroke-width="2"/>
+      
+      <rect x="116" y="86" width="168" height="22" rx="2" fill="#bca382"/>
+      <rect x="122" y="89" width="10" height="16" rx="1.5" fill="#201d1a"/>
+      <circle cx="146" cy="97" r="3" fill="#facc15" filter="url(#glow-yellow)"/>
+      <g fill="#1b1c1d">
+        <circle cx="198" cy="97" r="6"/>
+        <path d="M 198 97 L 194 93" stroke="#bca382" stroke-width="1.5"/>
+        <circle cx="218" cy="97" r="6"/>
+        <path d="M 218 97 L 218 91" stroke="#bca382" stroke-width="1.5"/>
+        <circle cx="238" cy="97" r="6"/>
+        <path d="M 238 97 L 242 93" stroke="#bca382" stroke-width="1.5"/>
+        <circle cx="258" cy="97" r="6"/>
+        <path d="M 258 97 L 262 93" stroke="#bca382" stroke-width="1.5"/>
+      </g>
+
+      <rect x="115" y="118" width="170" height="44" rx="4" fill="#494c4f"/>
+      <circle cx="140" cy="140" r="11" fill="#313336"/>
+      <circle cx="140" cy="140" r="8" fill="#5a5e62"/>
+      <circle cx="136" cy="136" r="1.5" fill="#f0f0f0"/>
+      <text x="140" y="157" font-family="sans-serif" font-size="6" fill="#a0a4a8" text-anchor="middle">Drive</text>
+      <text x="175" y="146" font-family="sans-serif" font-size="18" font-weight="900" fill="#9ba0a5" text-anchor="middle">KAT</text>
+      <g fill="#2c2f32">
+        <circle cx="210" cy="136" r="6.5"/>
+        <path d="M 210 136 L 210 131" stroke="#a0a4a8" stroke-width="1.5"/>
+        <circle cx="230" cy="136" r="6.5"/>
+        <path d="M 230 136 L 233 132" stroke="#a0a4a8" stroke-width="1.5"/>
+        <circle cx="250" cy="136" r="6.5"/>
+        <path d="M 250 136 L 247 132" stroke="#a0a4a8" stroke-width="1.5"/>
+      </g>
+      <text x="210" y="157" font-family="sans-serif" font-size="6" fill="#a0a4a8" text-anchor="middle">Tone</text>
+      <text x="230" y="157" font-family="sans-serif" font-size="6" fill="#a0a4a8" text-anchor="middle">Bass</text>
+      <text x="250" y="157" font-family="sans-serif" font-size="6" fill="#a0a4a8" text-anchor="middle">Treble</text>
+      <circle cx="272" cy="126" r="2" fill="#facc15" filter="url(#glow-yellow)"/>
+      <circle cx="272" cy="142" r="8" fill="#b0b3b6"/>
+      <circle cx="272" cy="142" r="5" fill="#d1d4d8"/>
+      <text x="272" y="157" font-family="sans-serif" font-size="6" fill="#a0a4a8" text-anchor="middle">Status</text>
+
+      <rect x="115" y="166" width="170" height="44" rx="4" fill="#ea7f24"/>
+      <circle cx="135" cy="184" r="11" fill="#f4ebd0"/>
+      <path d="M 135 184 L 135 175" stroke="#1b1c1d" stroke-width="2"/>
+      <text x="135" y="203" font-family="sans-serif" font-size="6" font-weight="bold" fill="#2b1a0c" text-anchor="middle">FUZZ</text>
+      <rect x="160" y="180" width="8" height="12" rx="1" fill="#1b1c1d"/>
+      <circle cx="164" cy="186" r="3" fill="#d1d4d8"/>
+      <rect x="163" y="176" width="2" height="10" fill="#f0f0f0"/>
+      <g fill="#f4ebd0">
+        <circle cx="190" cy="184" r="6.5"/>
+        <circle cx="215" cy="184" r="6.5"/>
+        <circle cx="240" cy="184" r="6.5"/>
+      </g>
+      <g stroke="#1b1c1d" stroke-width="1.5" stroke-linecap="round">
+        <line x1="190" y1="184" x2="190" y2="179"/>
+        <line x1="215" y1="184" x2="212" y2="180"/>
+        <line x1="240" y1="184" x2="243" y2="180"/>
+      </g>
+      <g font-family="sans-serif" font-size="5" font-weight="bold" fill="#2b1a0c" text-anchor="middle">
+        <text x="190" y="201">LEVEL</text>
+        <text x="215" y="201">TONE</text>
+        <text x="240" y="201">BIAS</text>
+      </g>
+      <circle cx="270" cy="174" r="2" fill="#facc15" filter="url(#glow-yellow)"/>
+      <circle cx="270" cy="188" r="8" fill="#d1d4d8"/>
+      <circle cx="270" cy="188" r="5" fill="#f0f0f0"/>
+      <circle cx="270" cy="188" r="2" fill="#1b1c1d" opacity="0.2"/>
+
+      <rect x="115" y="214" width="170" height="44" rx="4" fill="#467eb5"/>
+      <g fill="#1b1c1d">
+        <circle cx="135" cy="232" r="6.5"/>
+        <path d="M 135 232 L 135 227" stroke="#467eb5" stroke-width="1.5"/>
+        <circle cx="160" cy="232" r="6.5"/>
+        <path d="M 160 232 L 163 228" stroke="#467eb5" stroke-width="1.5"/>
+        <circle cx="185" cy="232" r="6.5"/>
+        <path d="M 185 232 L 185 227" stroke="#467eb5" stroke-width="1.5"/>
+        <circle cx="210" cy="232" r="6.5"/>
+        <path d="M 210 232 L 206 229" stroke="#467eb5" stroke-width="1.5"/>
+      </g>
+      <g font-family="sans-serif" font-size="6" fill="#132738" text-anchor="middle">
+        <text x="135" y="222">Time</text>
+        <text x="160" y="222">Feedback</text>
+        <text x="185" y="222">Mix</text>
+        <text x="210" y="222">Modulation</text>
+      </g>
+      <text x="172.5" y="251" font-family="sans-serif" font-size="14" font-weight="900" fill="#132738" text-anchor="middle">DELAY</text>
+      <circle cx="272" cy="236" r="8" fill="#b0b3b6"/>
+      <circle cx="272" cy="236" r="5" fill="#d1d4d8"/>
+
+      <rect x="105" y="262" width="190" height="34" rx="4" fill="#a2a7ab"/>
+      <circle cx="122" cy="279" r="6" fill="#757a7f"/>
+      <circle cx="122" cy="279" r="3" fill="#1b1c1d"/>
+      <text x="122" y="269" font-family="sans-serif" font-size="6" fill="#2b2d2f" text-anchor="middle">In</text>
+      
+      <circle cx="278" cy="279" r="6" fill="#757a7f"/>
+      <circle cx="278" cy="279" r="3" fill="#1b1c1d"/>
+      <path d="M 275 266 A 3 3 0 0 1 281 266 L 281 268 L 275 268 Z" fill="#2b2d2f"/> <rect x="142" y="270" width="30" height="18" rx="2" fill="#4ade80" stroke="#757a7f" stroke-width="2"/>
+      <path d="M 146 282 A 10 10 0 0 1 168 282" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+      <line x1="157" y1="286" x2="161" y2="273" stroke="#1b1c1d" stroke-width="1.5" stroke-linecap="round"/>
+      
+      <rect x="180" y="270" width="30" height="18" rx="2" fill="#fbbf24" stroke="#757a7f" stroke-width="2"/>
+      <path d="M 184 282 A 10 10 0 0 1 206 282" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+      <line x1="195" y1="286" x2="198" y2="274" stroke="#1b1c1d" stroke-width="1.5" stroke-linecap="round"/>
+
+      <rect x="218" y="270" width="30" height="18" rx="2" fill="#f87171" stroke="#757a7f" stroke-width="2"/>
+      <path d="M 222 282 A 10 10 0 0 1 244 282" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+      <line x1="233" y1="286" x2="241" y2="275" stroke="#1b1c1d" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+
+    <text x="200" y="345" font-family="sans-serif" font-size="52" font-weight="900" fill="#f4ebd0" text-anchor="middle">Kasane</text>
+
+  </g>
+</svg>

@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <filter id="drop-shadow" x="-8%" y="-8%" width="116%" height="125%">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+
+    <filter id="glow-yellow">
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <pattern id="grill" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#44392e"/>
+      <rect width="3" height="3" fill="#241e18"/>
+      <rect x="3" y="3" width="3" height="3" fill="#241e18"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="400" height="400" rx="80" fill="#1b1c1d"/>
+  <rect x="0" y="0" width="400" height="400" rx="80" fill="none" stroke="#666666" stroke-width="2" opacity="0.24"/>
+
+  <!-- centered vertically and horizontally -->
+  <g filter="url(#drop-shadow)">
+    <!-- rails -->
+    <rect x="102" y="48" width="12" height="228" fill="#262729"/>
+    <rect x="286" y="48" width="12" height="228" fill="#262729"/>
+
+    <!-- top amp / preamp -->
+    <rect x="82" y="30" width="236" height="80" rx="5" fill="#6e5c4a"/>
+    <rect x="80" y="28" width="8" height="8" rx="2" fill="#9f9282"/>
+    <rect x="312" y="28" width="8" height="8" rx="2" fill="#9f9282"/>
+    <rect x="80" y="104" width="8" height="8" rx="2" fill="#9f9282"/>
+    <rect x="312" y="104" width="8" height="8" rx="2" fill="#9f9282"/>
+
+    <rect x="92" y="40" width="216" height="36" rx="3" fill="url(#grill)"/>
+    <rect x="92" y="40" width="216" height="36" rx="3" fill="none" stroke="#332a21" stroke-width="2"/>
+
+    <rect x="92" y="80" width="216" height="22" rx="2" fill="#bca382"/>
+    <rect x="102" y="83" width="12" height="16" rx="1.5" fill="#201d1a"/>
+    <circle cx="130" cy="91" r="3.2" fill="#facc15" filter="url(#glow-yellow)"/>
+
+    <g fill="#1b1c1d">
+      <circle cx="212" cy="91" r="6.8"/>
+      <path d="M 212 91 L 207 86" stroke="#bca382" stroke-width="1.6"/>
+      <circle cx="238" cy="91" r="6.8"/>
+      <path d="M 238 91 L 238 83" stroke="#bca382" stroke-width="1.6"/>
+      <circle cx="264" cy="91" r="6.8"/>
+      <path d="M 264 91 L 269 86" stroke="#bca382" stroke-width="1.6"/>
+      <circle cx="290" cy="91" r="6.8"/>
+      <path d="M 290 91 L 295 86" stroke="#bca382" stroke-width="1.6"/>
+    </g>
+
+    <!-- drive unit -->
+    <rect x="86" y="126" width="228" height="52" rx="4" fill="#494c4f"/>
+    <circle cx="118" cy="152" r="12.5" fill="#313336"/>
+    <circle cx="118" cy="152" r="8.8" fill="#5a5e62"/>
+    <circle cx="114" cy="148" r="1.6" fill="#f0f0f0"/>
+    <text x="118" y="172" font-family="sans-serif" font-size="6.5" fill="#a0a4a8" text-anchor="middle">Drive</text>
+
+    <text x="172" y="158" font-family="sans-serif" font-size="20" font-weight="900" fill="#9ba0a5" text-anchor="middle">KAT</text>
+
+    <g fill="#2c2f32">
+      <circle cx="228" cy="147" r="7.2"/>
+      <path d="M 228 147 L 228 141" stroke="#a0a4a8" stroke-width="1.6"/>
+      <circle cx="254" cy="147" r="7.2"/>
+      <path d="M 254 147 L 258 142" stroke="#a0a4a8" stroke-width="1.6"/>
+      <circle cx="280" cy="147" r="7.2"/>
+      <path d="M 280 147 L 275 142" stroke="#a0a4a8" stroke-width="1.6"/>
+    </g>
+
+    <text x="228" y="171" font-family="sans-serif" font-size="6.5" fill="#a0a4a8" text-anchor="middle">Tone</text>
+    <text x="254" y="171" font-family="sans-serif" font-size="6.5" fill="#a0a4a8" text-anchor="middle">Bass</text>
+    <text x="280" y="171" font-family="sans-serif" font-size="6.5" fill="#a0a4a8" text-anchor="middle">Treble</text>
+
+    <circle cx="298" cy="138" r="2.3" fill="#facc15" filter="url(#glow-yellow)"/>
+    <circle cx="298" cy="155" r="8.8" fill="#b0b3b6"/>
+    <circle cx="298" cy="155" r="5.4" fill="#d1d4d8"/>
+
+    <!-- fuzz unit -->
+    <rect x="86" y="188" width="228" height="54" rx="4" fill="#ea7f24"/>
+    <circle cx="114" cy="210" r="12.5" fill="#f4ebd0"/>
+    <path d="M 114 210 L 114 199" stroke="#1b1c1d" stroke-width="2"/>
+    <text x="114" y="232" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#2b1a0c" text-anchor="middle">FUZZ</text>
+
+    <rect x="148" y="202" width="9" height="14" rx="1" fill="#1b1c1d"/>
+    <circle cx="152.5" cy="209" r="3" fill="#d1d4d8"/>
+    <rect x="151.5" y="196" width="2" height="12" fill="#f0f0f0"/>
+
+    <g fill="#f4ebd0">
+      <circle cx="188" cy="209" r="7.2"/>
+      <circle cx="220" cy="209" r="7.2"/>
+      <circle cx="252" cy="209" r="7.2"/>
+    </g>
+    <g stroke="#1b1c1d" stroke-width="1.6" stroke-linecap="round">
+      <line x1="188" y1="209" x2="188" y2="202"/>
+      <line x1="220" y1="209" x2="216" y2="203"/>
+      <line x1="252" y1="209" x2="256" y2="203"/>
+    </g>
+    <g font-family="sans-serif" font-size="5.7" font-weight="bold" fill="#2b1a0c" text-anchor="middle">
+      <text x="188" y="230">LEVEL</text>
+      <text x="220" y="230">TONE</text>
+      <text x="252" y="230">BIAS</text>
+    </g>
+
+    <circle cx="296" cy="199" r="2.3" fill="#facc15" filter="url(#glow-yellow)"/>
+    <circle cx="296" cy="215" r="8.8" fill="#d1d4d8"/>
+    <circle cx="296" cy="215" r="5.4" fill="#f0f0f0"/>
+
+    <!-- delay unit -->
+    <rect x="86" y="252" width="228" height="54" rx="4" fill="#467eb5"/>
+    <g fill="#1b1c1d">
+      <circle cx="116" cy="273" r="7.2"/>
+      <path d="M 116 273 L 116 267" stroke="#467eb5" stroke-width="1.6"/>
+      <circle cx="148" cy="273" r="7.2"/>
+      <path d="M 148 273 L 152 268" stroke="#467eb5" stroke-width="1.6"/>
+      <circle cx="180" cy="273" r="7.2"/>
+      <path d="M 180 273 L 180 267" stroke="#467eb5" stroke-width="1.6"/>
+      <circle cx="212" cy="273" r="7.2"/>
+      <path d="M 212 273 L 207 269" stroke="#467eb5" stroke-width="1.6"/>
+    </g>
+
+    <g font-family="sans-serif" font-size="6.2" fill="#132738" text-anchor="middle">
+      <text x="116" y="262">Time</text>
+      <text x="148" y="262">Feedback</text>
+      <text x="180" y="262">Mix</text>
+      <text x="212" y="262">Mod</text>
+    </g>
+
+    <text x="200" y="296" font-family="sans-serif" font-size="15.5" font-weight="900" fill="#132738" text-anchor="middle">DELAY</text>
+    <circle cx="296" cy="277" r="8.8" fill="#b0b3b6"/>
+    <circle cx="296" cy="277" r="5.4" fill="#d1d4d8"/>
+
+    <!-- bottom io -->
+    <rect x="80" y="318" width="240" height="38" rx="4" fill="#a2a7ab"/>
+    <circle cx="102" cy="337" r="6.8" fill="#757a7f"/>
+    <circle cx="102" cy="337" r="3.3" fill="#1b1c1d"/>
+    <text x="102" y="324" font-family="sans-serif" font-size="6.2" fill="#2b2d2f" text-anchor="middle">In</text>
+
+    <circle cx="298" cy="337" r="6.8" fill="#757a7f"/>
+    <circle cx="298" cy="337" r="3.3" fill="#1b1c1d"/>
+
+    <rect x="128" y="327" width="36" height="20" rx="2" fill="#4ade80" stroke="#757a7f" stroke-width="2"/>
+    <path d="M 133 340 A 11 11 0 0 1 159 340" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+    <line x1="146" y1="344" x2="151" y2="329" stroke="#1b1c1d" stroke-width="1.6" stroke-linecap="round"/>
+
+    <rect x="182" y="327" width="36" height="20" rx="2" fill="#fbbf24" stroke="#757a7f" stroke-width="2"/>
+    <path d="M 187 340 A 11 11 0 0 1 213 340" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+    <line x1="200" y1="344" x2="204" y2="330" stroke="#1b1c1d" stroke-width="1.6" stroke-linecap="round"/>
+
+    <rect x="236" y="327" width="36" height="20" rx="2" fill="#f87171" stroke="#757a7f" stroke-width="2"/>
+    <path d="M 241 340 A 11 11 0 0 1 267 340" fill="none" stroke="#1b1c1d" stroke-width="1" opacity="0.6"/>
+    <line x1="254" y1="344" x2="264" y2="331" stroke="#1b1c1d" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+</svg>

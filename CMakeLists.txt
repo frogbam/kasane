@@ -38,6 +38,8 @@ juce_add_gui_app(kasane
     PRODUCT_NAME "Kasane"
     COMPANY_NAME "Kasane Project"
     BUNDLE_ID com.kasane.app
+    ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon/icon.svg"
+    ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon/icon.svg"
     NEEDS_WEB_BROWSER TRUE
     NEEDS_WEBVIEW2 TRUE
 )

@@ -1,8 +1,12 @@
+<div align="center">
+  <img src="./docs/images/thumbnail.svg" alt="Kasane icon" width="320" />
+</div>
+
 # Kasane
 
 > A fast, lightweight guitar amp and FX plugin host for instant playing without a DAW.
 
-![Kasane](./docs/images/main_light.png)
+![Kasane](./docs/images/main_night.png)
 
 Kasane is a lightweight Windows app for guitar players who want to hear their sound immediately without opening a full DAW.
 
