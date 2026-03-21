@@ -438,7 +438,10 @@ private:
 };
 
 AudioHostEngine::AudioHostEngine(juce::ApplicationProperties& properties)
-    : appProperties(properties)
+    : appProperties(properties),
+      presetStore(juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                      .getChildFile("kasane")
+                      .getChildFile("presets"))
 {
 }
 
@@ -462,6 +465,8 @@ void AudioHostEngine::prepareStartup()
 void AudioHostEngine::restorePersistedState()
 {
     restoreState();
+    refreshPresetLibrary();
+    clearLoadedPresetBinding();
     transportPlayHead.setBpm(bpm);
     restoredPluginCount = 0;
     skippedPluginCount = 0;
@@ -556,12 +561,163 @@ void AudioHostEngine::finishHostedPluginRestore()
         statusMessage = "Plug-in chain restored with some unavailable plug-ins skipped.";
     else if (skippedPluginCount > 0)
         statusMessage = "Saved plug-ins were unavailable and could not be restored.";
+
+    refreshPresetDirtyState();
 }
 
 void AudioHostEngine::completeStartup()
 {
     suspendStatePersistence = false;
+    refreshPresetDirtyState();
     persistState();
+}
+
+ToneSnapshot AudioHostEngine::buildToneSnapshot() const
+{
+    ToneSnapshot snapshot;
+    snapshot.bpm = bpm;
+    snapshot.inputGainDb = inputGainDb;
+    snapshot.outputGainDb = outputGainDb;
+
+    for (const auto& plugin : hostedPlugins)
+    {
+        juce::MemoryBlock stateData;
+        plugin.node->getProcessor()->getStateInformation(stateData);
+
+        snapshot.plugins.push_back({
+            plugin.description.createIdentifierString(),
+            stateData.toBase64Encoding(),
+            plugin.isEnabled,
+        });
+    }
+
+    return snapshot;
+}
+
+bool AudioHostEngine::applyToneSnapshot(const ToneSnapshot& snapshot)
+{
+    clearHostedPlugins();
+
+    bpm = juce::jlimit(20.0, 300.0, snapshot.bpm);
+    transportPlayHead.setBpm(bpm);
+
+    inputGainDb = juce::jlimit(-60.0f, 20.0f, snapshot.inputGainDb);
+    if (auto* processor = dynamic_cast<GainProcessor*>(inputGainNode->getProcessor()))
+        processor->setGainDb(inputGainDb);
+
+    outputGainDb = juce::jlimit(-60.0f, 20.0f, snapshot.outputGainDb);
+    if (auto* processor = dynamic_cast<GainProcessor*>(outputGainNode->getProcessor()))
+        processor->setGainDb(outputGainDb);
+
+    auto restoredCount = 0;
+    auto skippedCount = 0;
+
+    for (const auto& presetPlugin : snapshot.plugins)
+    {
+        const auto description = knownPluginList.getTypeForIdentifierString(presetPlugin.identifier);
+
+        if (description == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        juce::String errorMessage;
+        auto instance = pluginFormatManager.createPluginInstance(*description, currentSampleRate, currentBlockSize, errorMessage);
+
+        if (instance == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        instance->enableAllBuses();
+
+        if (presetPlugin.stateBase64.isNotEmpty())
+        {
+            juce::MemoryBlock stateData;
+
+            if (stateData.fromBase64Encoding(presetPlugin.stateBase64))
+                instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
+        }
+
+        auto node = graph.addNode(std::move(instance), std::nullopt, juce::AudioProcessorGraph::UpdateKind::none);
+
+        if (node == nullptr)
+        {
+            ++skippedCount;
+            continue;
+        }
+
+        hostedPlugins.push_back({ juce::Uuid().toString(), *description, node, presetPlugin.isEnabled });
+        ++restoredCount;
+    }
+
+    rebuildGraphConnections();
+
+    if (skippedCount > 0 && restoredCount > 0)
+        statusMessage = "Preset loaded with some unavailable plug-ins skipped.";
+    else if (skippedCount > 0)
+        statusMessage = "Preset loaded but some plug-ins were unavailable.";
+    else
+        statusMessage = "Preset loaded.";
+
+    refreshPresetDirtyState();
+    persistState();
+    return true;
+}
+
+juce::String AudioHostEngine::serialiseToneSnapshotToXml(const ToneSnapshot& snapshot) const
+{
+    return PresetStore::serialiseToneSnapshotToXml(snapshot);
+}
+
+void AudioHostEngine::refreshPresetLibrary()
+{
+    presets = presetStore.loadSummaries();
+}
+
+void AudioHostEngine::refreshPresetDirtyState()
+{
+    const auto liveSnapshotXml = serialiseToneSnapshotToXml(buildToneSnapshot());
+
+    if (currentPresetId.isNotEmpty() && loadedPresetSnapshotXml.isNotEmpty())
+    {
+        hasUnsavedPresetChanges = liveSnapshotXml != loadedPresetSnapshotXml;
+        return;
+    }
+
+    hasUnsavedPresetChanges = liveSnapshotXml != serialiseToneSnapshotToXml(makeDefaultToneSnapshot());
+}
+
+void AudioHostEngine::bindLoadedPreset(const PresetRecord& record)
+{
+    currentPresetId = record.summary.id;
+    currentPresetName = record.summary.name;
+    loadedPresetSnapshotXml = serialiseToneSnapshotToXml(buildToneSnapshot());
+    hasUnsavedPresetChanges = false;
+}
+
+void AudioHostEngine::clearLoadedPresetBinding()
+{
+    currentPresetId.clear();
+    currentPresetName.clear();
+    loadedPresetSnapshotXml.clear();
+}
+
+void AudioHostEngine::clearHostedPlugins()
+{
+    clearEditors();
+
+    for (const auto& plugin : hostedPlugins)
+        graph.removeNode(plugin.node->nodeID, juce::AudioProcessorGraph::UpdateKind::none);
+
+    hostedPlugins.clear();
+}
+
+ToneSnapshot AudioHostEngine::makeDefaultToneSnapshot()
+{
+    return {};
 }
 
 AppState AudioHostEngine::getAppStateSnapshot() const
@@ -609,6 +765,11 @@ AppState AudioHostEngine::getAppStateSnapshot() const
             ! plugin.isEnabled
         });
     }
+
+    state.presets = presets;
+    state.currentPresetId = currentPresetId;
+    state.currentPresetName = currentPresetName;
+    state.hasUnsavedPresetChanges = hasUnsavedPresetChanges;
 
     return state;
 }
@@ -791,6 +952,7 @@ void AudioHostEngine::setBpm(double bpmIn)
 {
     bpm = juce::jlimit(20.0, 300.0, bpmIn);
     transportPlayHead.setBpm(bpm);
+    refreshPresetDirtyState();
     persistState();
 }
 
@@ -801,6 +963,7 @@ void AudioHostEngine::setInputGainDb(float gainDb)
     if (auto* processor = dynamic_cast<GainProcessor*>(inputGainNode->getProcessor()))
         processor->setGainDb(inputGainDb);
 
+    refreshPresetDirtyState();
     persistState();
 }
 
@@ -811,6 +974,7 @@ void AudioHostEngine::setOutputGainDb(float gainDb)
     if (auto* processor = dynamic_cast<GainProcessor*>(outputGainNode->getProcessor()))
         processor->setGainDb(outputGainDb);
 
+    refreshPresetDirtyState();
     persistState();
 }
 
@@ -1027,6 +1191,7 @@ bool AudioHostEngine::addPluginToChain(const juce::String& pluginDescriptorId)
     hostedPlugins.push_back({ juce::Uuid().toString(), *description, node, true });
     rebuildGraphConnections();
     statusMessage = description->name + " added to the chain.";
+    refreshPresetDirtyState();
     return true;
 }
 
@@ -1049,6 +1214,7 @@ bool AudioHostEngine::removePluginFromChain(const juce::String& chainPluginId)
     hostedPlugins.erase(iterator);
     rebuildGraphConnections();
     statusMessage = removedName + " removed from the chain.";
+    refreshPresetDirtyState();
     return true;
 }
 
@@ -1059,6 +1225,7 @@ bool AudioHostEngine::togglePluginBypass(const juce::String& chainPluginId)
         plugin->isEnabled = ! plugin->isEnabled;
         rebuildGraphConnections();
         statusMessage = plugin->description.name + (plugin->isEnabled ? " enabled." : " bypassed.");
+        refreshPresetDirtyState();
         return true;
     }
 
@@ -1090,6 +1257,125 @@ bool AudioHostEngine::reorderPlugin(const juce::String& chainPluginId, int newIn
     hostedPlugins.insert(hostedPlugins.begin() + newIndex, std::move(plugin));
     rebuildGraphConnections();
     statusMessage = "Plug-in chain reordered.";
+    refreshPresetDirtyState();
+    return true;
+}
+
+bool AudioHostEngine::loadPreset(const juce::String& presetId)
+{
+    PresetRecord record;
+    if (const auto result = presetStore.loadPreset(presetId, record); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    if (!applyToneSnapshot(record.snapshot))
+        return false;
+
+    bindLoadedPreset(record);
+    refreshPresetLibrary();
+    return true;
+}
+
+bool AudioHostEngine::saveCurrentPreset()
+{
+    if (currentPresetId.isEmpty())
+    {
+        setLastError("No preset is currently selected.");
+        return false;
+    }
+
+    PresetRecord record;
+    if (const auto result = presetStore.saveExistingPreset(currentPresetId, buildToneSnapshot(), record); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    refreshPresetLibrary();
+    bindLoadedPreset(record);
+    statusMessage = "Preset saved.";
+    persistState();
+    return true;
+}
+
+bool AudioHostEngine::savePresetAs(const juce::String& name)
+{
+    PresetRecord record;
+    if (const auto result = presetStore.saveNewPreset(name, buildToneSnapshot(), record); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    refreshPresetLibrary();
+    bindLoadedPreset(record);
+    statusMessage = "Preset saved.";
+    persistState();
+    return true;
+}
+
+bool AudioHostEngine::renamePreset(const juce::String& presetId, const juce::String& name)
+{
+    PresetRecord record;
+    if (const auto result = presetStore.renamePreset(presetId, name, record); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    refreshPresetLibrary();
+
+    if (currentPresetId == record.summary.id)
+    {
+        currentPresetName = record.summary.name;
+        hasUnsavedPresetChanges = serialiseToneSnapshotToXml(buildToneSnapshot()) != loadedPresetSnapshotXml;
+    }
+
+    statusMessage = "Preset renamed.";
+    persistState();
+    return true;
+}
+
+bool AudioHostEngine::duplicatePreset(const juce::String& presetId, const juce::String& name)
+{
+    PresetRecord record;
+    if (const auto result = presetStore.duplicatePreset(presetId, name, record); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    refreshPresetLibrary();
+    statusMessage = "Preset duplicated.";
+    return true;
+}
+
+bool AudioHostEngine::deletePreset(const juce::String& presetId)
+{
+    if (const auto result = presetStore.deletePreset(presetId); result.failed())
+    {
+        setLastError(result.getErrorMessage());
+        refreshPresetLibrary();
+        return false;
+    }
+
+    refreshPresetLibrary();
+
+    if (currentPresetId == presetId)
+    {
+        clearLoadedPresetBinding();
+        refreshPresetDirtyState();
+    }
+
+    statusMessage = "Preset deleted.";
+    persistState();
     return true;
 }
 

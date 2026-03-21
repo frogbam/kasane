@@ -13,8 +13,8 @@
   align-items: center;
   gap: var(--space-md);
   width: 100%;
-  max-width: 600px;
   padding: var(--space-xl);
+  padding-right: calc(var(--space-xl) + 8px);
   padding-bottom: calc(var(--space-xl) + 60px);
   overflow-y: auto;
   flex: 1;
@@ -63,7 +63,8 @@
 
 .chain-slot {
   width: 100%;
-  max-width: 480px;
+  max-width: 560px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -245,6 +246,7 @@
   height: 48px;
   min-width: 48px;
   min-height: 48px;
+  margin: 0 auto;
   background-color: var(--bg-elevated);
   border: 2px dashed var(--border);
   border-radius: 50%;

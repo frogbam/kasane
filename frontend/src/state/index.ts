@@ -1,5 +1,5 @@
 import { signal, computed } from '@preact/signals';
-import type { AppState, AudioState, TunerState, MeterState, PluginDescriptor, ChainSlot, Language, Theme } from '../types';
+import type { AppState, AudioState, TunerState, MeterState, PluginDescriptor, ChainSlot, Language, Theme, PresetSummary } from '../types';
 
 const initialState: AppState = {
   bridgeVersion: '',
@@ -46,6 +46,10 @@ const initialState: AppState = {
   },
   availablePlugins: [],
   chain: [],
+  presets: [],
+  currentPresetId: '',
+  currentPresetName: '',
+  hasUnsavedPresetChanges: false,
 };
 
 export const bridgeVersion = signal<string>(initialState.bridgeVersion);
@@ -61,6 +65,10 @@ export const tuner = signal<TunerState>(initialState.tuner);
 export const meters = signal<MeterState>(initialState.meters);
 export const availablePlugins = signal<PluginDescriptor[]>(initialState.availablePlugins);
 export const chain = signal<ChainSlot[]>(initialState.chain);
+export const presets = signal<PresetSummary[]>(initialState.presets);
+export const currentPresetId = signal<string>(initialState.currentPresetId);
+export const currentPresetName = signal<string>(initialState.currentPresetName);
+export const hasUnsavedPresetChanges = signal<boolean>(initialState.hasUnsavedPresetChanges);
 
 export const inputGainDb = computed(() => audio.value.inputGainDb);
 export const outputGainDb = computed(() => audio.value.outputGainDb);
@@ -96,6 +104,10 @@ export function setAppState(newState: AppState): void {
   meters.value = { ...newState.meters };
   availablePlugins.value = [...newState.availablePlugins];
   chain.value = [...newState.chain];
+  presets.value = [...newState.presets];
+  currentPresetId.value = newState.currentPresetId;
+  currentPresetName.value = newState.currentPresetName;
+  hasUnsavedPresetChanges.value = newState.hasUnsavedPresetChanges;
 }
 
 export function updateAudioState(newAudio: AudioState): void {

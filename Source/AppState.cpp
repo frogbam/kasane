@@ -115,6 +115,16 @@ juce::var toVar(const MeterState& state)
     return object.get();
 }
 
+juce::var toVar(const PresetSummary& preset)
+{
+    auto object = makeObject();
+    object->setProperty("id", preset.id);
+    object->setProperty("name", preset.name);
+    object->setProperty("updatedAt", preset.updatedAt);
+    object->setProperty("pluginCount", preset.pluginCount);
+    return object.get();
+}
+
 juce::var toVar(const AppState& state)
 {
     auto object = makeObject();
@@ -130,6 +140,10 @@ juce::var toVar(const AppState& state)
     object->setProperty("meters", toVar(state.meters));
     object->setProperty("availablePlugins", makeArray(state.availablePlugins, [] (const auto& plugin) { return toVar(plugin); }));
     object->setProperty("chain", makeArray(state.chain, [] (const auto& slot) { return toVar(slot); }));
+    object->setProperty("presets", makeArray(state.presets, [] (const auto& preset) { return toVar(preset); }));
+    object->setProperty("currentPresetId", state.currentPresetId);
+    object->setProperty("currentPresetName", state.currentPresetName);
+    object->setProperty("hasUnsavedPresetChanges", state.hasUnsavedPresetChanges);
     return object.get();
 }
 

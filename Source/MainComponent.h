@@ -54,6 +54,7 @@ private:
     void reportStartupStatus(const juce::String& message, bool isError = false);
 
     void timerCallback() override;
+    void emitAppState();
     void emitBootstrapState();
     void emitAudioState();
     void emitPluginState();

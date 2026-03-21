@@ -6,6 +6,7 @@ import { BottomBar } from './features/bottom-bar';
 import { SettingsOverlay } from './features/settings-overlay';
 import { TunerOverlay } from './features/tuner-overlay';
 import { PluginPickerOverlay } from './features/plugin-picker';
+import { PresetSidebar } from './features/preset-sidebar';
 import { bridge } from './bridge';
 import { setupMockBridge } from './bridge/mock';
 import { setLanguage as setI18nLanguage } from './i18n';
@@ -47,6 +48,7 @@ export function App() {
 
     eventTokens.value = [
       bridge.addEventListener('bootstrapState', handleBootstrapState),
+      bridge.addEventListener('appStateChanged', handleBootstrapState),
       bridge.addEventListener('audioStateChanged', handleAudioStateChanged),
       bridge.addEventListener('pluginListChanged', handlePluginListChanged),
       bridge.addEventListener('pluginChainChanged', handlePluginChainChanged),
@@ -169,11 +171,16 @@ export function App() {
 
   return (
     <div class="app-layout" data-theme={themeSignal.value}>
-      <Header onOpenSettings={handleOpenSettings} />
-      <main class="main-content">
-        <ChainView onAddPlugin={handleOpenPluginPicker} />
-      </main>
-      <BottomBar onOpenSettings={handleOpenSettings} />
+      <PresetSidebar />
+      <div class="app-shell">
+        <Header onOpenSettings={handleOpenSettings} />
+        <main class="main-content">
+          <div class="main-content__workspace">
+            <ChainView onAddPlugin={handleOpenPluginPicker} />
+          </div>
+        </main>
+        <BottomBar onOpenSettings={handleOpenSettings} />
+      </div>
       <SettingsOverlay isOpen={settingsOpen.value} onClose={handleCloseSettings} />
       <TunerOverlay isOpen={tunerOpen.value} onClose={handleCloseTuner} />
       <PluginPickerOverlay

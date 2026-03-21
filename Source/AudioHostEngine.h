@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 
 #include "AppState.h"
+#include "PresetStore.h"
 
 #include <optional>
 
@@ -108,6 +109,12 @@ public:
     bool togglePluginBypass(const juce::String& chainPluginId);
     bool reorderPlugin(const juce::String& chainPluginId, int newIndex);
     bool openPluginEditor(const juce::String& chainPluginId, juce::Component& parentComponent);
+    bool loadPreset(const juce::String& presetId);
+    bool saveCurrentPreset();
+    bool savePresetAs(const juce::String& name);
+    bool renamePreset(const juce::String& presetId, const juce::String& name);
+    bool duplicatePreset(const juce::String& presetId, const juce::String& name);
+    bool deletePreset(const juce::String& presetId);
 
     std::optional<juce::String> consumeLastError();
 
@@ -136,6 +143,15 @@ private:
     void refreshMonitorChannelSelection();
     void persistState() const;
     void restoreState();
+    ToneSnapshot buildToneSnapshot() const;
+    bool applyToneSnapshot(const ToneSnapshot& snapshot);
+    juce::String serialiseToneSnapshotToXml(const ToneSnapshot& snapshot) const;
+    void refreshPresetLibrary();
+    void refreshPresetDirtyState();
+    void bindLoadedPreset(const PresetRecord& record);
+    void clearLoadedPresetBinding();
+    void clearHostedPlugins();
+    static ToneSnapshot makeDefaultToneSnapshot();
     void clearEditors();
     void closeEditorForPlugin(const juce::String& chainPluginId);
     void setLastError(const juce::String& message);
@@ -143,6 +159,7 @@ private:
     const HostedPlugin* findHostedPlugin(const juce::String& chainPluginId) const;
 
     juce::ApplicationProperties& appProperties;
+    PresetStore presetStore;
     juce::AudioPluginFormatManager pluginFormatManager;
     juce::KnownPluginList knownPluginList;
     juce::AudioDeviceManager deviceManager;
@@ -180,6 +197,11 @@ private:
 
     std::vector<HostedPlugin> hostedPlugins;
     std::vector<PersistedPluginState> persistedPluginChain;
+    std::vector<PresetSummary> presets;
+    juce::String currentPresetId;
+    juce::String currentPresetName;
+    juce::String loadedPresetSnapshotXml;
+    bool hasUnsavedPresetChanges = false;
     std::map<juce::String, std::unique_ptr<PluginEditorWindow>> editorWindows;
     bool suspendStatePersistence = false;
     bool pluginFormatsInitialised = false;

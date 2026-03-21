@@ -6,7 +6,7 @@
 namespace
 {
 constexpr auto windowBoundsKey = "window.bounds";
-constexpr auto fixedWindowWidth = 1024;
+constexpr auto fixedWindowWidth = 1360;
 constexpr auto fixedWindowHeight = 768;
 const auto windowBackgroundColour = juce::Colour::fromRGB(15, 23, 42);
 

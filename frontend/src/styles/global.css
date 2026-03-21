@@ -4,6 +4,7 @@
 :root {
   --header-height: 56px;
   --footer-height: 120px;
+  --app-min-width: 1360px;
 }
 
 .container {
@@ -15,11 +16,19 @@
 
 .app-layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   overflow: hidden;
-  min-width: 1024px;
+  min-width: var(--app-min-width);
   min-height: 768px;
+}
+
+.app-shell {
+  flex: 1;
+  min-width: 1024px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .main-content {
@@ -27,10 +36,23 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+.main-content__workspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
   .app-layout {
+    min-width: 100%;
+    flex-direction: column;
+  }
+
+  .app-shell {
     min-width: 100%;
   }
   

@@ -54,6 +54,13 @@ export interface ChainSlot {
   bypassed: boolean;
 }
 
+export interface PresetSummary {
+  id: string;
+  name: string;
+  updatedAt: string;
+  pluginCount: number;
+}
+
 export interface TunerState {
   isOpen: boolean;
   note: string;
@@ -82,6 +89,10 @@ export interface AppState {
   meters: MeterState;
   availablePlugins: PluginDescriptor[];
   chain: ChainSlot[];
+  presets: PresetSummary[];
+  currentPresetId: string;
+  currentPresetName: string;
+  hasUnsavedPresetChanges: boolean;
 }
 
 export type CommandParams = {
@@ -98,6 +109,12 @@ export type CommandParams = {
   togglePlugin: { chainPluginId: string };
   reorderPlugins: { chainPluginId: string; newIndex: number };
   openPluginEditor: { chainPluginId: string };
+  loadPreset: { presetId: string };
+  saveCurrentPreset: void;
+  savePresetAs: { name: string };
+  renamePreset: { presetId: string; name: string };
+  duplicatePreset: { presetId: string; name: string };
+  deletePreset: { presetId: string };
   openAudioSettings: void;
   previewAudioDeviceSetup: {
     inputDeviceId: string;

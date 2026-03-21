@@ -2,6 +2,8 @@
 
 #include <JuceHeader.h>
 
+#include "PresetStore.h"
+
 #include <vector>
 
 namespace kasane
@@ -97,6 +99,10 @@ struct AppState
     MeterState meters;
     std::vector<PluginDescriptor> availablePlugins;
     std::vector<ChainSlot> chain;
+    std::vector<PresetSummary> presets;
+    juce::String currentPresetId;
+    juce::String currentPresetName;
+    bool hasUnsavedPresetChanges = false;
 };
 
 juce::String makeDeviceId(const juce::String& deviceType, const juce::String& deviceName);
@@ -107,6 +113,7 @@ juce::var toVar(const ChainSlot& slot);
 juce::var toVar(const AudioState& state);
 juce::var toVar(const TunerState& state);
 juce::var toVar(const MeterState& state);
+juce::var toVar(const PresetSummary& preset);
 juce::var toVar(const AppState& state);
 
 } // namespace kasane

@@ -20,6 +20,66 @@ const mockChain: ChainSlot[] = [
   { pluginId: 'plugin-4', name: 'Spring Reverb', manufacturer: 'Kasane', category: 'Reverb', order: 2, bypassed: true },
 ];
 
+type MockPresetRecord = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  snapshot: {
+    bpm: number;
+    inputGainDb: number;
+    outputGainDb: number;
+    chain: ChainSlot[];
+  };
+};
+
+const mockPresetRecords: MockPresetRecord[] = [
+  {
+    id: 'preset-1',
+    name: 'British Crunch',
+    updatedAt: '2026-03-21T09:30:00.000Z',
+    snapshot: {
+      bpm: 120,
+      inputGainDb: 0,
+      outputGainDb: -6,
+      chain: mockChain,
+    },
+  },
+  {
+    id: 'preset-2',
+    name: 'Ambient Clean',
+    updatedAt: '2026-03-20T18:10:00.000Z',
+    snapshot: {
+      bpm: 88,
+      inputGainDb: -2,
+      outputGainDb: -4,
+      chain: [
+        { pluginId: 'plugin-6', name: 'Noise Gate', manufacturer: 'Kasane', category: 'Dynamics', order: 0, bypassed: false },
+        { pluginId: 'plugin-1', name: 'Classic Amp', manufacturer: 'Kasane', category: 'Amp', order: 1, bypassed: false },
+        { pluginId: 'plugin-3', name: 'Digital Delay', manufacturer: 'Kasane', category: 'Delay', order: 2, bypassed: false },
+        { pluginId: 'plugin-4', name: 'Spring Reverb', manufacturer: 'Kasane', category: 'Reverb', order: 3, bypassed: false },
+      ],
+    },
+  },
+];
+
+function cloneChainSlots(chain: ChainSlot[]): ChainSlot[] {
+  return chain.map((slot, index) => ({
+    ...slot,
+    order: index,
+  }));
+}
+
+function buildPresetSummaries(records: MockPresetRecord[]) {
+  return [...records]
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+    .map((record) => ({
+      id: record.id,
+      name: record.name,
+      updatedAt: record.updatedAt,
+      pluginCount: record.snapshot.chain.length,
+    }));
+}
+
 const mockAudioState: AudioState = {
   inputGainDb: 0,
   outputGainDb: -6,
@@ -82,17 +142,25 @@ const mockAppState: AppState = {
     outputRightDb: -16,
   },
   availablePlugins: mockPlugins,
-  chain: mockChain,
+  chain: cloneChainSlots(mockChain),
+  presets: buildPresetSummaries(mockPresetRecords),
+  currentPresetId: 'preset-1',
+  currentPresetName: 'British Crunch',
+  hasUnsavedPresetChanges: false,
 };
 
 class MockBridgeBackend {
   private eventListeners: Map<string, Set<EventCallback>> = new Map();
   private state: AppState;
+  private presetRecords: MockPresetRecord[];
+  private loadedPresetSnapshotKey = '';
   private meterInterval: ReturnType<typeof setInterval> | null = null;
   private tunerInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.state = JSON.parse(JSON.stringify(mockAppState));
+    this.presetRecords = JSON.parse(JSON.stringify(mockPresetRecords));
+    this.loadedPresetSnapshotKey = this.createSnapshotKey();
   }
 
   addEventListener(eventId: string, fn: EventCallback): unknown {
@@ -155,17 +223,22 @@ class MockBridgeBackend {
 
       case 'setBpm':
         this.state.bpm = this.readNumberArg(payload, 0);
-        this.emit('bootstrapState', this.state);
+        this.refreshPresetDirtyState();
+        this.emitAppState();
         return true;
 
       case 'setInputGain':
         this.state.audio.inputGainDb = this.readNumberArg(payload, 0);
         this.emit('audioStateChanged', this.state.audio);
+        this.refreshPresetDirtyState();
+        this.emitAppState();
         return true;
 
       case 'setOutputGain':
         this.state.audio.outputGainDb = this.readNumberArg(payload, 0);
         this.emit('audioStateChanged', this.state.audio);
+        this.refreshPresetDirtyState();
+        this.emitAppState();
         return true;
 
       case 'scanPlugins':
@@ -192,6 +265,8 @@ class MockBridgeBackend {
           };
           this.state.chain.push(newSlot);
           this.emit('pluginChainChanged', this.state);
+          this.refreshPresetDirtyState();
+          this.emitAppState();
         }
         return plugin != null;
 
@@ -200,6 +275,8 @@ class MockBridgeBackend {
         this.state.chain = this.state.chain.filter(c => c.pluginId !== removeId);
         this.state.chain.forEach((c, i) => c.order = i);
         this.emit('pluginChainChanged', this.state);
+        this.refreshPresetDirtyState();
+        this.emitAppState();
         return true;
 
       case 'togglePlugin':
@@ -208,6 +285,8 @@ class MockBridgeBackend {
         if (slot) {
           slot.bypassed = !slot.bypassed;
           this.emit('pluginChainChanged', this.state);
+          this.refreshPresetDirtyState();
+          this.emitAppState();
         }
         return slot != null;
 
@@ -220,12 +299,32 @@ class MockBridgeBackend {
           this.state.chain.splice(newIndex, 0, item);
           this.state.chain.forEach((c, i) => c.order = i);
           this.emit('pluginChainChanged', this.state);
+          this.refreshPresetDirtyState();
+          this.emitAppState();
         }
         return currentIndex !== -1;
 
       case 'openPluginEditor':
         console.log('[Mock] Opening plugin editor for:', this.readStringArg(payload, 0));
         return true;
+
+      case 'loadPreset':
+        return this.loadPreset(this.readStringArg(payload, 0));
+
+      case 'saveCurrentPreset':
+        return this.saveCurrentPreset();
+
+      case 'savePresetAs':
+        return this.savePresetAs(this.readStringArg(payload, 0));
+
+      case 'renamePreset':
+        return this.renamePreset(this.readStringArg(payload, 0), this.readStringArg(payload, 1));
+
+      case 'duplicatePreset':
+        return this.duplicatePreset(this.readStringArg(payload, 0), this.readStringArg(payload, 1));
+
+      case 'deletePreset':
+        return this.deletePreset(this.readStringArg(payload, 0));
 
       case 'openAudioSettings':
         this.emit('audioStateChanged', this.state.audio);
@@ -267,6 +366,232 @@ class MockBridgeBackend {
     if (listeners) {
       listeners.forEach(fn => fn(payload));
     }
+  }
+
+  private emitAppState(): void {
+    this.emit('appStateChanged', this.state);
+  }
+
+  private createSnapshotKey(): string {
+    return JSON.stringify({
+      bpm: this.state.bpm,
+      inputGainDb: this.state.audio.inputGainDb,
+      outputGainDb: this.state.audio.outputGainDb,
+      chain: this.state.chain.map((slot) => ({
+        pluginId: slot.pluginId,
+        bypassed: slot.bypassed,
+        order: slot.order,
+      })),
+    });
+  }
+
+  private refreshPresetSummaries(): void {
+    this.state.presets = buildPresetSummaries(this.presetRecords);
+  }
+
+  private refreshPresetDirtyState(): void {
+    const currentSnapshotKey = this.createSnapshotKey();
+
+    if (this.state.currentPresetId) {
+      this.state.hasUnsavedPresetChanges = currentSnapshotKey !== this.loadedPresetSnapshotKey;
+      return;
+    }
+
+    this.state.hasUnsavedPresetChanges = currentSnapshotKey !== JSON.stringify({
+      bpm: 120,
+      inputGainDb: 0,
+      outputGainDb: 0,
+      chain: [],
+    });
+  }
+
+  private setCurrentPresetBinding(record: MockPresetRecord): void {
+    this.state.currentPresetId = record.id;
+    this.state.currentPresetName = record.name;
+    this.loadedPresetSnapshotKey = this.createSnapshotKey();
+    this.state.hasUnsavedPresetChanges = false;
+  }
+
+  private clearCurrentPresetBinding(): void {
+    this.state.currentPresetId = '';
+    this.state.currentPresetName = '';
+    this.loadedPresetSnapshotKey = '';
+    this.refreshPresetDirtyState();
+  }
+
+  private createPresetRecord(name: string): MockPresetRecord {
+    const now = new Date().toISOString();
+
+    return {
+      id: `preset-${Math.random().toString(36).slice(2, 10)}`,
+      name,
+      updatedAt: now,
+      snapshot: {
+        bpm: this.state.bpm,
+        inputGainDb: this.state.audio.inputGainDb,
+        outputGainDb: this.state.audio.outputGainDb,
+        chain: cloneChainSlots(this.state.chain),
+      },
+    };
+  }
+
+  private ensureUniqueName(name: string, ignoredPresetId = ''): boolean {
+    return !this.presetRecords.some((record) => record.id !== ignoredPresetId && record.name.toLowerCase() === name.toLowerCase());
+  }
+
+  private fail(message: string): boolean {
+    this.state.lastError = message;
+    this.emit('errorRaised', message);
+    this.emitAppState();
+    return false;
+  }
+
+  private loadPreset(presetId: string): boolean {
+    const record = this.presetRecords.find((preset) => preset.id === presetId);
+    if (!record) {
+      return this.fail('The selected preset could not be found.');
+    }
+
+    this.state.bpm = record.snapshot.bpm;
+    this.state.audio.inputGainDb = record.snapshot.inputGainDb;
+    this.state.audio.outputGainDb = record.snapshot.outputGainDb;
+    this.state.chain = cloneChainSlots(record.snapshot.chain);
+    this.state.statusMessage = 'Preset loaded.';
+    this.state.lastError = '';
+    this.emit('audioStateChanged', this.state.audio);
+    this.emit('pluginChainChanged', this.state);
+    this.setCurrentPresetBinding(record);
+    this.emitAppState();
+    return true;
+  }
+
+  private saveCurrentPreset(): boolean {
+    if (!this.state.currentPresetId) {
+      return this.fail('No preset is currently selected.');
+    }
+
+    const record = this.presetRecords.find((preset) => preset.id === this.state.currentPresetId);
+    if (!record) {
+      return this.fail('The selected preset could not be found.');
+    }
+
+    record.updatedAt = new Date().toISOString();
+    record.snapshot = {
+      bpm: this.state.bpm,
+      inputGainDb: this.state.audio.inputGainDb,
+      outputGainDb: this.state.audio.outputGainDb,
+      chain: cloneChainSlots(this.state.chain),
+    };
+    this.refreshPresetSummaries();
+    this.setCurrentPresetBinding(record);
+    this.state.statusMessage = 'Preset saved.';
+    this.state.lastError = '';
+    this.emitAppState();
+    return true;
+  }
+
+  private savePresetAs(name: string): boolean {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return this.fail('Preset name cannot be empty.');
+    }
+
+    if (!this.ensureUniqueName(trimmedName)) {
+      return this.fail('A preset with the same name already exists.');
+    }
+
+    const record = this.createPresetRecord(trimmedName);
+    this.presetRecords.push(record);
+    this.refreshPresetSummaries();
+    this.setCurrentPresetBinding(record);
+    this.state.statusMessage = 'Preset saved.';
+    this.state.lastError = '';
+    this.emitAppState();
+    return true;
+  }
+
+  private renamePreset(presetId: string, name: string): boolean {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return this.fail('Preset name cannot be empty.');
+    }
+
+    if (!this.ensureUniqueName(trimmedName, presetId)) {
+      return this.fail('A preset with the same name already exists.');
+    }
+
+    const record = this.presetRecords.find((preset) => preset.id === presetId);
+    if (!record) {
+      return this.fail('The selected preset could not be found.');
+    }
+
+    record.name = trimmedName;
+    record.updatedAt = new Date().toISOString();
+    this.refreshPresetSummaries();
+
+    if (this.state.currentPresetId === presetId) {
+      this.state.currentPresetName = trimmedName;
+    }
+
+    this.state.statusMessage = 'Preset renamed.';
+    this.state.lastError = '';
+    this.emitAppState();
+    return true;
+  }
+
+  private duplicatePreset(presetId: string, name: string): boolean {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return this.fail('Preset name cannot be empty.');
+    }
+
+    if (!this.ensureUniqueName(trimmedName)) {
+      return this.fail('A preset with the same name already exists.');
+    }
+
+    const source = this.presetRecords.find((preset) => preset.id === presetId);
+    if (!source) {
+      return this.fail('The selected preset could not be found.');
+    }
+
+    this.presetRecords.push({
+      id: `preset-${Math.random().toString(36).slice(2, 10)}`,
+      name: trimmedName,
+      updatedAt: new Date().toISOString(),
+      snapshot: {
+        bpm: source.snapshot.bpm,
+        inputGainDb: source.snapshot.inputGainDb,
+        outputGainDb: source.snapshot.outputGainDb,
+        chain: cloneChainSlots(source.snapshot.chain),
+      },
+    });
+    this.refreshPresetSummaries();
+    this.state.statusMessage = 'Preset duplicated.';
+    this.state.lastError = '';
+    this.emitAppState();
+    return true;
+  }
+
+  private deletePreset(presetId: string): boolean {
+    const currentLength = this.presetRecords.length;
+    this.presetRecords = this.presetRecords.filter((preset) => preset.id !== presetId);
+
+    if (this.presetRecords.length === currentLength) {
+      return this.fail('The selected preset could not be found.');
+    }
+
+    this.refreshPresetSummaries();
+
+    if (this.state.currentPresetId === presetId) {
+      this.clearCurrentPresetBinding();
+    } else {
+      this.refreshPresetDirtyState();
+    }
+
+    this.state.statusMessage = 'Preset deleted.';
+    this.state.lastError = '';
+    this.emitAppState();
+    return true;
   }
 
   private readStringArg(payload: unknown, index: number): string {

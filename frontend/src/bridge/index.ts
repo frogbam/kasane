@@ -104,6 +104,7 @@ class Bridge {
       case 'frontendReady':
       case 'frontendVisualReady':
       case 'scanPlugins':
+      case 'saveCurrentPreset':
       case 'openAudioSettings':
         return [];
 
@@ -119,6 +120,9 @@ class Bridge {
       case 'setTheme':
         return [params?.themeName ?? 'dark'];
 
+      case 'savePresetAs':
+        return [params?.name ?? ''];
+
       case 'setBpm':
         return [params?.bpm ?? 120];
 
@@ -129,10 +133,20 @@ class Bridge {
       case 'addPlugin':
         return [params?.pluginDescriptorId ?? ''];
 
+      case 'loadPreset':
+        return [params?.presetId ?? ''];
+
       case 'removePlugin':
       case 'togglePlugin':
       case 'openPluginEditor':
         return [params?.chainPluginId ?? ''];
+
+      case 'deletePreset':
+        return [params?.presetId ?? ''];
+
+      case 'renamePreset':
+      case 'duplicatePreset':
+        return [params?.presetId ?? '', params?.name ?? ''];
 
       case 'reorderPlugins':
         return [params?.chainPluginId ?? '', params?.newIndex ?? 0];

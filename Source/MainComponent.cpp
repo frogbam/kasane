@@ -289,7 +289,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             {
                                 if (engine != nullptr)
                                     engine->setBpm(readDoubleArgument(args, 0, 120.0));
-                                emitBootstrapState();
+                                emitAppState();
                                 completion(true);
                             })
         .withNativeFunction("setInputGain",
@@ -298,6 +298,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 if (engine != nullptr)
                                     engine->setInputGainDb(static_cast<float>(readDoubleArgument(args, 0)));
                                 emitAudioState();
+                                emitAppState();
                                 completion(true);
                             })
         .withNativeFunction("setOutputGain",
@@ -306,6 +307,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 if (engine != nullptr)
                                     engine->setOutputGainDb(static_cast<float>(readDoubleArgument(args, 0)));
                                 emitAudioState();
+                                emitAppState();
                                 completion(true);
                             })
         .withNativeFunction("scanPlugins",
@@ -313,6 +315,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             {
                                 completion(engine != nullptr ? engine->scanForPlugins() : false);
                                 emitPluginState();
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("addPlugin",
@@ -321,6 +324,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                                 completion(engine != nullptr ? engine->addPluginToChain(readStringArgument(args, 0)) : false);
                                 emitChainState();
                                 emitPluginState();
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("removePlugin",
@@ -328,6 +332,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             {
                                 completion(engine != nullptr ? engine->removePluginFromChain(readStringArgument(args, 0)) : false);
                                 emitChainState();
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("togglePlugin",
@@ -335,6 +340,7 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             {
                                 completion(engine != nullptr ? engine->togglePluginBypass(readStringArgument(args, 0)) : false);
                                 emitChainState();
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("reorderPlugins",
@@ -342,12 +348,57 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             {
                                 completion(engine != nullptr ? engine->reorderPlugin(readStringArgument(args, 0), static_cast<int>(readDoubleArgument(args, 1))) : false);
                                 emitChainState();
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("openPluginEditor",
                             [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                             {
                                 completion(engine != nullptr ? engine->openPluginEditor(readStringArgument(args, 0), *this) : false);
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("loadPreset",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->loadPreset(readStringArgument(args, 0)) : false);
+                                emitAudioState();
+                                emitChainState();
+                                emitAppState();
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("saveCurrentPreset",
+                            [this](const juce::Array<juce::var>&, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->saveCurrentPreset() : false);
+                                emitAppState();
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("savePresetAs",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->savePresetAs(readStringArgument(args, 0)) : false);
+                                emitAppState();
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("renamePreset",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->renamePreset(readStringArgument(args, 0), readStringArgument(args, 1)) : false);
+                                emitAppState();
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("duplicatePreset",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->duplicatePreset(readStringArgument(args, 0), readStringArgument(args, 1)) : false);
+                                emitAppState();
+                                emitErrorIfNeeded();
+                            })
+        .withNativeFunction("deletePreset",
+                            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                            {
+                                completion(engine != nullptr ? engine->deletePreset(readStringArgument(args, 0)) : false);
+                                emitAppState();
                                 emitErrorIfNeeded();
                             })
         .withNativeFunction("openAudioSettings",
@@ -587,6 +638,12 @@ void MainComponent::timerCallback()
     emitMeterState();
     emitTunerState();
     emitErrorIfNeeded();
+}
+
+void MainComponent::emitAppState()
+{
+    if (webView != nullptr && engine != nullptr)
+        webView->emitEventIfBrowserIsVisible("appStateChanged", toVar(engine->getAppStateSnapshot()));
 }
 
 void MainComponent::emitBootstrapState()
