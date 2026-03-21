@@ -13,6 +13,7 @@ public:
 
 private:
     class SplashContent;
+    SplashContent* splashContent = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SplashWindow)
 };

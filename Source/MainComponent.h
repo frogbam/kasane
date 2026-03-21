@@ -46,7 +46,7 @@ private:
 
     juce::WebBrowserComponent::Options createBrowserOptions();
     std::optional<Resource> getResource(const juce::String& path) const;
-    juce::String getStartupErrorMessage() const;
+    juce::String getStartupErrorMessage();
     void setStartupMessage(const juce::String& message, bool isError = false);
     void hideStartupOverlay();
     void advanceStartup();

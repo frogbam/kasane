@@ -427,9 +427,9 @@ std::optional<MainComponent::Resource> MainComponent::getResource(const juce::St
     return Resource { toByteVector(bytes), getMimeTypeForPath(normalisedPath) };
 }
 
-juce::String MainComponent::getStartupErrorMessage() const
+juce::String MainComponent::getStartupErrorMessage()
 {
-    const auto options = const_cast<MainComponent*>(this)->createBrowserOptions();
+    const auto options = createBrowserOptions();
     auto dataSize = 0;
 
     if (getEmbeddedResourceData("/", dataSize) == nullptr || dataSize <= 0)

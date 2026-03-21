@@ -21,7 +21,9 @@ public:
     {
         setUsingNativeTitleBar(true);
         setResizable(false, false);
-        setContentOwned(new kasane::MainComponent(properties), true);
+        auto* content = new kasane::MainComponent(properties);
+        mainComponent = content;
+        setContentOwned(content, true);
 
         const auto savedBounds = juce::Rectangle<int>::fromString(properties.getUserSettings()->getValue(windowBoundsKey));
 
@@ -43,7 +45,7 @@ public:
                       kasane::MainComponent::ReadyCallback onBackendReady,
                       kasane::MainComponent::ReadyCallback onFrontendReady)
     {
-        if (auto* mainComponent = dynamic_cast<kasane::MainComponent*>(getContentComponent()))
+        if (mainComponent != nullptr)
             mainComponent->initialiseAsync(std::move(onStatus), std::move(onBackendReady), std::move(onFrontendReady));
     }
 
@@ -54,6 +56,7 @@ public:
 
 private:
     juce::ApplicationProperties& properties;
+    kasane::MainComponent* mainComponent = nullptr;
 };
 } // namespace
 
@@ -79,24 +82,15 @@ public:
         mainWindow->beginStartup(
             [this](const juce::String& message, bool isError)
             {
-                if (splashWindow != nullptr)
-                    splashWindow->setStatus(message, isError);
+                setSplashStatus(message, isError);
             },
             [this]
             {
-                if (mainWindow != nullptr)
-                    mainWindow->setVisible(true);
-
-                if (splashWindow != nullptr)
-                    splashWindow->toFront(true);
+                revealMainWindow();
             },
             [this]
             {
-                if (splashWindow != nullptr)
-                    splashWindow.reset();
-
-                if (mainWindow != nullptr)
-                    mainWindow->toFront(true);
+                finishStartupTransition();
             });
     }
 
@@ -116,6 +110,29 @@ public:
     }
 
 private:
+    void setSplashStatus(const juce::String& message, bool isError)
+    {
+        if (splashWindow != nullptr)
+            splashWindow->setStatus(message, isError);
+    }
+
+    void revealMainWindow()
+    {
+        if (mainWindow != nullptr)
+            mainWindow->setVisible(true);
+
+        if (splashWindow != nullptr)
+            splashWindow->toFront(true);
+    }
+
+    void finishStartupTransition()
+    {
+        splashWindow.reset();
+
+        if (mainWindow != nullptr)
+            mainWindow->toFront(true);
+    }
+
     juce::ApplicationProperties appProperties;
     std::unique_ptr<SplashWindow> splashWindow;
     std::unique_ptr<MainWindow> mainWindow;

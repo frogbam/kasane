@@ -102,14 +102,16 @@ private:
 SplashWindow::SplashWindow(const juce::String& title)
     : juce::DocumentWindow(title,
                            splashBackgroundColour,
-                           juce::DocumentWindow::allButtons & ~juce::DocumentWindow::allButtons)
+                           0)
 {
     setUsingNativeTitleBar(false);
     setTitleBarHeight(0);
     setResizable(false, false);
     setAlwaysOnTop(true);
 
-    setContentOwned(new SplashContent(), true);
+    auto* content = new SplashContent();
+    splashContent = content;
+    setContentOwned(content, true);
     centreWithSize(splashWindowWidth, splashWindowHeight);
     setVisible(true);
     toFront(true);
@@ -119,8 +121,8 @@ SplashWindow::~SplashWindow() = default;
 
 void SplashWindow::setStatus(const juce::String& message, bool isError)
 {
-    if (auto* content = dynamic_cast<SplashContent*>(getContentComponent()))
-        content->setStatus(message, isError);
+    if (splashContent != nullptr)
+        splashContent->setStatus(message, isError);
 }
 
 void SplashWindow::closeButtonPressed()
