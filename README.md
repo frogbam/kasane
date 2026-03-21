@@ -37,6 +37,13 @@ Kasane is for the shorter path.
 
 Kasane is not trying to be a DAW, recorder, or multitrack production tool.
 
+## Changelog
+
+### 0.1.2
+
+- Added a startup splash screen to make app launch feedback clearer while initialization is in progress.
+- Added a preset library so tones can be saved, recalled, renamed, duplicated, and deleted inside the app.
+
 ## Installation
 
 Download `Kasane.exe` from the [Releases](https://github.com/frogbam/kasane/releases/latest) page.
