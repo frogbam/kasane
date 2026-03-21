@@ -25,7 +25,6 @@ public:
                          ReadyCallback onFrontendReady);
 
     void paint(juce::Graphics& g) override;
-    void paintOverChildren(juce::Graphics& g) override;
     void resized() override;
 
 private:
@@ -47,8 +46,6 @@ private:
     juce::WebBrowserComponent::Options createBrowserOptions();
     std::optional<Resource> getResource(const juce::String& path) const;
     juce::String getStartupErrorMessage();
-    void setStartupMessage(const juce::String& message, bool isError = false);
-    void hideStartupOverlay();
     void advanceStartup();
     void scheduleStartupAdvance();
     void reportStartupStatus(const juce::String& message, bool isError = false);
@@ -68,9 +65,6 @@ private:
     std::unique_ptr<juce::WebBrowserComponent> webView;
     bool browserReady = false;
     bool initialised = false;
-    bool startupOverlayVisible = true;
-    bool startupOverlayHasError = false;
-    juce::String startupMessage;
     StartupStage startupStage = StartupStage::createEngine;
     StatusCallback startupStatusCallback;
     ReadyCallback backendReadyCallback;

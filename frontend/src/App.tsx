@@ -79,7 +79,6 @@ export function App() {
       isBootstrapped.value = true;
       requestAnimationFrame(() => {
         bridge.emit('frontendVisualReady');
-        dismissBootSplash();
       });
     }
   };
@@ -118,20 +117,6 @@ export function App() {
 
   const applyTheme = (themeName: 'dark' | 'light') => {
     document.documentElement.setAttribute('data-theme', themeName);
-  };
-
-  const dismissBootSplash = () => {
-    const splash = document.getElementById('app-boot');
-    if (!splash || splash.dataset.dismissed === 'true') {
-      return;
-    }
-
-    splash.dataset.dismissed = 'true';
-    splash.classList.add('is-hiding');
-
-    window.setTimeout(() => {
-      splash.remove();
-    }, 280);
   };
 
   const handleOpenSettings = () => {

@@ -131,7 +131,6 @@ MainComponent::MainComponent(juce::ApplicationProperties& properties)
     : appProperties(properties)
 {
     setOpaque(true);
-    startupMessage = "Preparing audio engine and interface...";
 }
 
 void MainComponent::initialiseAsync(StatusCallback onStatus,
@@ -154,72 +153,6 @@ void MainComponent::initialiseAsync(StatusCallback onStatus,
 void MainComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour::fromRGB(15, 23, 42));
-}
-
-void MainComponent::paintOverChildren(juce::Graphics& g)
-{
-    if (!startupOverlayVisible)
-        return;
-
-    const auto bounds = getLocalBounds().toFloat();
-
-    juce::ColourGradient backgroundGradient(juce::Colour::fromRGB(11, 17, 30), bounds.getTopLeft(),
-                                            juce::Colour::fromRGB(7, 9, 14), bounds.getBottomRight(), false);
-    backgroundGradient.addColour(0.35, juce::Colour::fromRGBA(232, 122, 28, 38));
-    backgroundGradient.addColour(0.7, juce::Colour::fromRGBA(74, 222, 128, 20));
-    g.setGradientFill(backgroundGradient);
-    g.fillAll();
-
-    auto panelBounds = getLocalBounds().reduced(48).withSizeKeepingCentre(560, 240).toFloat();
-    g.setColour(juce::Colour::fromRGBA(10, 10, 10, 210));
-    g.fillRoundedRectangle(panelBounds, 18.0f);
-
-    g.setColour(juce::Colour::fromRGBA(255, 255, 255, 24));
-    g.drawRoundedRectangle(panelBounds, 18.0f, 1.0f);
-
-    auto contentBounds = panelBounds.reduced(28.0f, 24.0f);
-
-    g.setColour(juce::Colour::fromRGB(232, 122, 28));
-    g.setFont(juce::FontOptions(12.0f).withKerningFactor(0.28f));
-    g.drawText("AUDIO HOST", contentBounds.removeFromTop(18.0f), juce::Justification::topLeft);
-
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::FontOptions(48.0f, juce::Font::bold));
-    g.drawText("Kasane", contentBounds.removeFromTop(62.0f), juce::Justification::topLeft);
-
-    g.setFont(juce::FontOptions(20.0f, juce::Font::bold));
-    g.drawText(startupOverlayHasError ? "Startup issue detected" : "Initializing application",
-               contentBounds.removeFromTop(34.0f),
-               juce::Justification::topLeft);
-
-    g.setColour(startupOverlayHasError ? juce::Colour::fromRGB(248, 113, 113)
-                                       : juce::Colour::fromRGB(214, 214, 214));
-    g.setFont(juce::FontOptions(16.0f));
-    g.drawFittedText(startupMessage,
-                     contentBounds.removeFromTop(58.0f).toNearestInt(),
-                     juce::Justification::topLeft,
-                     3,
-                     1.0f);
-
-    if (!startupOverlayHasError)
-    {
-        auto progressBounds = contentBounds.removeFromTop(14.0f).reduced(0.0f, 5.0f);
-        g.setColour(juce::Colour::fromRGBA(255, 255, 255, 18));
-        g.fillRoundedRectangle(progressBounds, 2.0f);
-
-        const auto indicatorWidth = juce::jlimit(96.0f, progressBounds.getWidth(), progressBounds.getWidth() * 0.32f);
-        const auto travel = juce::jmax(0.0f, progressBounds.getWidth() - indicatorWidth);
-        const auto phase = static_cast<float>((juce::Time::getMillisecondCounterHiRes() * 0.001) * 1.6);
-        const auto oscillation = 0.5f + 0.5f * std::sin(phase);
-        auto indicatorBounds = progressBounds.withWidth(indicatorWidth).translated(travel * oscillation, 0.0f);
-
-        juce::ColourGradient indicatorGradient(juce::Colour::fromRGBA(232, 122, 28, 0), indicatorBounds.getTopLeft(),
-                                               juce::Colour::fromRGBA(232, 122, 28, 242), indicatorBounds.getCentre(),
-                                               false);
-        indicatorGradient.addColour(1.0, juce::Colour::fromRGBA(232, 122, 28, 0));
-        g.setGradientFill(indicatorGradient);
-        g.fillRoundedRectangle(indicatorBounds, 2.0f);
-    }
 }
 
 void MainComponent::resized()
@@ -260,7 +193,6 @@ juce::WebBrowserComponent::Options MainComponent::createBrowserOptions()
                             [this](const juce::Array<juce::var>&, juce::WebBrowserComponent::NativeFunctionCompletion completion)
                             {
                                 browserReady = true;
-                                hideStartupOverlay();
                                 startupStage = StartupStage::finished;
 
                                 if (frontendReadyCallback != nullptr)
@@ -492,24 +424,6 @@ juce::String MainComponent::getStartupErrorMessage()
     return {};
 }
 
-void MainComponent::setStartupMessage(const juce::String& message, bool isError)
-{
-    startupMessage = message;
-    startupOverlayHasError = isError;
-    startupOverlayVisible = true;
-    repaint();
-}
-
-void MainComponent::hideStartupOverlay()
-{
-    if (!startupOverlayVisible)
-        return;
-
-    startupOverlayVisible = false;
-    startupOverlayHasError = false;
-    repaint();
-}
-
 void MainComponent::advanceStartup()
 {
     switch (startupStage)
@@ -621,17 +535,12 @@ void MainComponent::scheduleStartupAdvance()
 
 void MainComponent::reportStartupStatus(const juce::String& message, bool isError)
 {
-    setStartupMessage(message, isError);
-
     if (startupStatusCallback != nullptr)
         startupStatusCallback(message, isError);
 }
 
 void MainComponent::timerCallback()
 {
-    if (startupOverlayVisible && !startupOverlayHasError)
-        repaint();
-
     if (!browserReady || webView == nullptr)
         return;
 
