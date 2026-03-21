@@ -31,6 +31,7 @@ Kasane is for the shorter path.
 - Fast audio device setup
 - Input/output gain control and live meters
 - Drag-and-drop plug-in chain
+- Preset library for saving and recalling tones
 - Native plug-in editor windows
 - English, Korean, Japanese, and Simplified Chinese UI
 
