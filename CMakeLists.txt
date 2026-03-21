@@ -104,6 +104,8 @@ target_sources(kasane
         Source/Main.cpp
         Source/MainComponent.cpp
         Source/MainComponent.h
+        Source/SplashWindow.cpp
+        Source/SplashWindow.h
 )
 
 target_compile_definitions(kasane

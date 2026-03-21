@@ -27,6 +27,7 @@ export function App() {
   const settingsOpen = useSignal(false);
   const tunerOpen = useSignal(false);
   const pluginPickerOpen = useSignal(false);
+  const isBootstrapped = useSignal(false);
 
   useEffect(() => {
     initializeApp();
@@ -54,9 +55,7 @@ export function App() {
       bridge.addEventListener('errorRaised', handleErrorRaised),
     ];
 
-    setTimeout(() => {
-      bridge.emit('frontendReady');
-    }, 100);
+    bridge.emit('frontendReady');
   };
 
   const cleanupApp = () => {
@@ -73,6 +72,14 @@ export function App() {
     setAppState(state);
     setI18nLanguage(state.language);
     applyTheme(state.theme);
+
+    if (!isBootstrapped.value) {
+      isBootstrapped.value = true;
+      requestAnimationFrame(() => {
+        bridge.emit('frontendVisualReady');
+        dismissBootSplash();
+      });
+    }
   };
 
   const handleAudioStateChanged = (payload: unknown) => {
@@ -111,6 +118,20 @@ export function App() {
     document.documentElement.setAttribute('data-theme', themeName);
   };
 
+  const dismissBootSplash = () => {
+    const splash = document.getElementById('app-boot');
+    if (!splash || splash.dataset.dismissed === 'true') {
+      return;
+    }
+
+    splash.dataset.dismissed = 'true';
+    splash.classList.add('is-hiding');
+
+    window.setTimeout(() => {
+      splash.remove();
+    }, 280);
+  };
+
   const handleOpenSettings = () => {
     bridge.emit('openAudioSettings');
     settingsOpen.value = true;
@@ -141,6 +162,10 @@ export function App() {
   const handleSelectPlugin = (pluginId: string) => {
     bridge.emit('addPlugin', { pluginDescriptorId: pluginId });
   };
+
+  if (!isBootstrapped.value) {
+    return null;
+  }
 
   return (
     <div class="app-layout" data-theme={themeSignal.value}>

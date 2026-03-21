@@ -4,9 +4,244 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kasane</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(232, 122, 28, 0.22), transparent 32%),
+          radial-gradient(circle at 85% 20%, rgba(248, 113, 113, 0.12), transparent 26%),
+          #0a0a0a;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(232, 122, 28, 0.22), transparent 32%),
+          radial-gradient(circle at 85% 20%, rgba(248, 113, 113, 0.12), transparent 26%),
+          #0a0a0a;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      #app {
+        min-height: 100vh;
+      }
+
+      #app-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        color: #f7f4ef;
+        background:
+          linear-gradient(180deg, rgba(10, 10, 10, 0.82), rgba(10, 10, 10, 0.96)),
+          radial-gradient(circle at top left, rgba(232, 122, 28, 0.18), transparent 34%),
+          radial-gradient(circle at 82% 18%, rgba(74, 222, 128, 0.14), transparent 22%),
+          #0a0a0a;
+        transition:
+          opacity 240ms ease,
+          visibility 240ms ease,
+          transform 240ms ease;
+      }
+
+      #app-boot::before,
+      #app-boot::after {
+        content: "";
+        position: absolute;
+        inset: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+
+      #app-boot::after {
+        inset: auto 24px 24px 24px;
+        height: 1px;
+        border: 0;
+        background: linear-gradient(90deg, transparent, rgba(232, 122, 28, 0.5), transparent);
+        animation: bootScan 1.8s ease-in-out infinite;
+      }
+
+      #app-boot.is-hiding {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(1.015);
+      }
+
+      .boot-panel {
+        position: relative;
+        width: min(100%, 720px);
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, rgba(20, 20, 20, 0.72), rgba(20, 20, 20, 0.44));
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(18px);
+      }
+
+      .boot-label {
+        margin: 0 0 16px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.28em;
+        color: rgba(232, 122, 28, 0.88);
+      }
+
+      .boot-title {
+        margin: 0;
+        font-size: clamp(44px, 10vw, 72px);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
+      }
+
+      .boot-status {
+        margin: 18px 0 8px;
+        font-size: clamp(16px, 2vw, 22px);
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .boot-description {
+        margin: 0;
+        max-width: 38ch;
+        font-size: 14px;
+        line-height: 1.7;
+        color: rgba(240, 240, 240, 0.68);
+      }
+
+      .boot-progress {
+        position: relative;
+        margin-top: 28px;
+        height: 3px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .boot-progress > span {
+        position: absolute;
+        inset: 0;
+        width: 36%;
+        background: linear-gradient(90deg, rgba(232, 122, 28, 0), rgba(232, 122, 28, 0.95), rgba(232, 122, 28, 0));
+        animation: bootProgress 1.35s ease-in-out infinite;
+      }
+
+      .boot-meta {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(154, 154, 154, 0.92);
+      }
+
+      @keyframes bootProgress {
+        0% {
+          transform: translateX(-120%);
+        }
+
+        100% {
+          transform: translateX(300%);
+        }
+      }
+
+      @keyframes bootScan {
+        0%,
+        100% {
+          opacity: 0.18;
+        }
+
+        50% {
+          opacity: 0.78;
+        }
+      }
+
+      @media (max-width: 720px) {
+        #app-boot {
+          padding: 20px;
+        }
+
+        .boot-panel {
+          padding: 28px 24px;
+        }
+
+        .boot-meta {
+          flex-direction: column;
+          gap: 6px;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="app-boot" aria-live="polite">
+      <div class="boot-panel">
+        <p class="boot-label" id="boot-label">AUDIO HOST</p>
+        <h1 class="boot-title">Kasane</h1>
+        <p class="boot-status" id="boot-status">Preparing your signal chain</p>
+        <p class="boot-description" id="boot-description">Loading audio devices, plug-ins, and the last known workspace state.</p>
+        <div class="boot-progress" aria-hidden="true"><span></span></div>
+        <div class="boot-meta" aria-hidden="true">
+          <span id="boot-meta-primary">Initializing interface</span>
+          <span id="boot-meta-secondary">Please wait</span>
+        </div>
+      </div>
+    </div>
     <div id="app"></div>
+    <script>
+      (() => {
+        const language = (navigator.language || "en").toLowerCase();
+        const locale = language.startsWith("ko")
+          ? "ko"
+          : language.startsWith("ja")
+            ? "ja"
+            : language.startsWith("zh")
+              ? "zh"
+              : "en";
+
+        const copy = {
+          en: {
+            status: "Preparing your signal chain",
+            description: "Loading audio devices, plug-ins, and the last known workspace state.",
+            metaPrimary: "Initializing interface",
+            metaSecondary: "Please wait",
+          },
+          ko: {
+            status: "Kasane를 준비하고 있습니다",
+            description: "오디오 장치, 플러그인, 마지막 작업 상태를 불러오는 중입니다.",
+            metaPrimary: "인터페이스 초기화 중",
+            metaSecondary: "잠시만 기다려 주세요",
+          },
+          ja: {
+            status: "Kasane を準備しています",
+            description: "オーディオデバイス、プラグイン、前回の状態を読み込んでいます。",
+            metaPrimary: "インターフェースを初期化中",
+            metaSecondary: "しばらくお待ちください",
+          },
+          zh: {
+            status: "正在准备 Kasane",
+            description: "正在加载音频设备、插件以及上次的工作状态。",
+            metaPrimary: "正在初始化界面",
+            metaSecondary: "请稍候",
+          },
+        }[locale];
+
+        document.documentElement.lang = locale;
+        const status = document.getElementById("boot-status");
+        const description = document.getElementById("boot-description");
+        const metaPrimary = document.getElementById("boot-meta-primary");
+        const metaSecondary = document.getElementById("boot-meta-secondary");
+
+        if (status) status.textContent = copy.status;
+        if (description) description.textContent = copy.description;
+        if (metaPrimary) metaPrimary.textContent = copy.metaPrimary;
+        if (metaSecondary) metaSecondary.textContent = copy.metaSecondary;
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

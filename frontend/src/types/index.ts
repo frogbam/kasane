@@ -86,6 +86,7 @@ export interface AppState {
 
 export type CommandParams = {
   frontendReady: void;
+  frontendVisualReady: void;
   setLanguage: { languageCode: string };
   setTheme: { themeName: string };
   setBpm: { bpm: number };

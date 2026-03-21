@@ -440,25 +440,127 @@ private:
 AudioHostEngine::AudioHostEngine(juce::ApplicationProperties& properties)
     : appProperties(properties)
 {
-    suspendStatePersistence = true;
-    initialisePluginFormats();
-    restoreState();
-    transportPlayHead.setBpm(bpm);
-    initialiseAudioDeviceManager();
-    createBaseGraphNodes();
-    graph.setPlayHead(&transportPlayHead);
-    restoreHostedPluginsFromState();
-    suspendStatePersistence = false;
-    persistState();
-    deviceManager.addAudioCallback(this);
-    refreshDeviceLists();
 }
 
 AudioHostEngine::~AudioHostEngine()
 {
     clearEditors();
-    deviceManager.removeAudioCallback(this);
+
+    if (audioCallbackRegistered)
+        deviceManager.removeAudioCallback(this);
+
     graph.releaseResources();
+    persistState();
+}
+
+void AudioHostEngine::prepareStartup()
+{
+    suspendStatePersistence = true;
+    initialisePluginFormats();
+}
+
+void AudioHostEngine::restorePersistedState()
+{
+    restoreState();
+    transportPlayHead.setBpm(bpm);
+    restoredPluginCount = 0;
+    skippedPluginCount = 0;
+    nextPersistedPluginRestoreIndex = 0;
+}
+
+void AudioHostEngine::initialiseRuntime()
+{
+    if (runtimeInitialised)
+        return;
+
+    initialiseAudioDeviceManager();
+    createBaseGraphNodes();
+    graph.setPlayHead(&transportPlayHead);
+    deviceManager.addAudioCallback(this);
+    audioCallbackRegistered = true;
+    refreshDeviceLists();
+    runtimeInitialised = true;
+}
+
+int AudioHostEngine::getTotalPersistedPluginsToRestore() const
+{
+    return static_cast<int>(persistedPluginChain.size());
+}
+
+int AudioHostEngine::getRemainingPersistedPluginsToRestore() const
+{
+    return static_cast<int>(persistedPluginChain.size() - nextPersistedPluginRestoreIndex);
+}
+
+bool AudioHostEngine::hasPendingPersistedPluginsToRestore() const
+{
+    return nextPersistedPluginRestoreIndex < persistedPluginChain.size();
+}
+
+void AudioHostEngine::restoreNextHostedPluginFromState()
+{
+    if (!hasPendingPersistedPluginsToRestore())
+        return;
+
+    const auto& persistedPlugin = persistedPluginChain[nextPersistedPluginRestoreIndex++];
+    const auto description = knownPluginList.getTypeForIdentifierString(persistedPlugin.identifier);
+
+    if (description == nullptr)
+    {
+        ++skippedPluginCount;
+        return;
+    }
+
+    juce::String errorMessage;
+    auto instance = pluginFormatManager.createPluginInstance(*description, currentSampleRate, currentBlockSize, errorMessage);
+
+    if (instance == nullptr)
+    {
+        ++skippedPluginCount;
+        return;
+    }
+
+    instance->enableAllBuses();
+
+    if (persistedPlugin.stateBase64.isNotEmpty())
+    {
+        juce::MemoryBlock stateData;
+
+        if (stateData.fromBase64Encoding(persistedPlugin.stateBase64))
+            instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
+    }
+
+    auto node = graph.addNode(std::move(instance), std::nullopt, juce::AudioProcessorGraph::UpdateKind::none);
+
+    if (node == nullptr)
+    {
+        ++skippedPluginCount;
+        return;
+    }
+
+    hostedPlugins.push_back({ juce::Uuid().toString(), *description, node, persistedPlugin.isEnabled });
+    ++restoredPluginCount;
+}
+
+void AudioHostEngine::finishHostedPluginRestore()
+{
+    if (!persistedPluginChain.empty())
+    {
+        persistedPluginChain.clear();
+        rebuildGraphConnections();
+    }
+
+    if (restoredPluginCount > 0 && skippedPluginCount == 0)
+        statusMessage = "Plug-in chain restored.";
+    else if (restoredPluginCount > 0)
+        statusMessage = "Plug-in chain restored with some unavailable plug-ins skipped.";
+    else if (skippedPluginCount > 0)
+        statusMessage = "Saved plug-ins were unavailable and could not be restored.";
+}
+
+void AudioHostEngine::completeStartup()
+{
+    suspendStatePersistence = false;
     persistState();
 }
 
@@ -1158,7 +1260,11 @@ void AudioHostEngine::audioDeviceError(const juce::String& errorMessage)
 
 void AudioHostEngine::initialisePluginFormats()
 {
+    if (pluginFormatsInitialised)
+        return;
+
     pluginFormatManager.addFormat(std::make_unique<juce::VST3PluginFormat>());
+    pluginFormatsInitialised = true;
 }
 
 void AudioHostEngine::initialiseAudioDeviceManager()
@@ -1261,66 +1367,6 @@ void AudioHostEngine::rebuildGraphConnections()
     connectNodePair(outputAnalysisNode->nodeID, audioOutputNode->nodeID);
     graph.rebuild();
     persistState();
-}
-
-void AudioHostEngine::restoreHostedPluginsFromState()
-{
-    if (persistedPluginChain.empty())
-        return;
-
-    auto restoredCount = 0;
-    auto skippedCount = 0;
-
-    for (const auto& persistedPlugin : persistedPluginChain)
-    {
-        const auto description = knownPluginList.getTypeForIdentifierString(persistedPlugin.identifier);
-
-        if (description == nullptr)
-        {
-            ++skippedCount;
-            continue;
-        }
-
-        juce::String errorMessage;
-        auto instance = pluginFormatManager.createPluginInstance(*description, currentSampleRate, currentBlockSize, errorMessage);
-
-        if (instance == nullptr)
-        {
-            ++skippedCount;
-            continue;
-        }
-
-        instance->enableAllBuses();
-
-        if (persistedPlugin.stateBase64.isNotEmpty())
-        {
-            juce::MemoryBlock stateData;
-
-            if (stateData.fromBase64Encoding(persistedPlugin.stateBase64))
-                instance->setStateInformation(stateData.getData(), static_cast<int>(stateData.getSize()));
-        }
-
-        auto node = graph.addNode(std::move(instance), std::nullopt, juce::AudioProcessorGraph::UpdateKind::none);
-
-        if (node == nullptr)
-        {
-            ++skippedCount;
-            continue;
-        }
-
-        hostedPlugins.push_back({ juce::Uuid().toString(), *description, node, persistedPlugin.isEnabled });
-        ++restoredCount;
-    }
-
-    persistedPluginChain.clear();
-    rebuildGraphConnections();
-
-    if (restoredCount > 0 && skippedCount == 0)
-        statusMessage = "Plug-in chain restored.";
-    else if (restoredCount > 0)
-        statusMessage = "Plug-in chain restored with some unavailable plug-ins skipped.";
-    else if (skippedCount > 0)
-        statusMessage = "Saved plug-ins were unavailable and could not be restored.";
 }
 
 void AudioHostEngine::refreshDeviceLists()

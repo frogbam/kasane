@@ -102,6 +102,7 @@ class Bridge {
   private toNativeParams<K extends CommandName>(command: K, params?: CommandParams[K]): unknown[] {
     switch (command) {
       case 'frontendReady':
+      case 'frontendVisualReady':
       case 'scanPlugins':
       case 'openAudioSettings':
         return [];

@@ -67,6 +67,16 @@ public:
     explicit AudioHostEngine(juce::ApplicationProperties& properties);
     ~AudioHostEngine() override;
 
+    void prepareStartup();
+    void restorePersistedState();
+    void initialiseRuntime();
+    int getTotalPersistedPluginsToRestore() const;
+    int getRemainingPersistedPluginsToRestore() const;
+    bool hasPendingPersistedPluginsToRestore() const;
+    void restoreNextHostedPluginFromState();
+    void finishHostedPluginRestore();
+    void completeStartup();
+
     AppState getAppStateSnapshot() const;
     AudioState getAudioStateSnapshot() const;
     AudioState previewAudioDeviceSetup(const juce::String& inputDeviceId,
@@ -120,7 +130,6 @@ private:
     void initialiseAudioDeviceManager();
     void createBaseGraphNodes();
     void rebuildGraphConnections();
-    void restoreHostedPluginsFromState();
     void refreshDeviceLists();
     void updateDeviceOptionsForType(const juce::String& deviceType);
     void refreshInputChannelSelection();
@@ -173,6 +182,12 @@ private:
     std::vector<PersistedPluginState> persistedPluginChain;
     std::map<juce::String, std::unique_ptr<PluginEditorWindow>> editorWindows;
     bool suspendStatePersistence = false;
+    bool pluginFormatsInitialised = false;
+    bool runtimeInitialised = false;
+    bool audioCallbackRegistered = false;
+    int restoredPluginCount = 0;
+    int skippedPluginCount = 0;
+    size_t nextPersistedPluginRestoreIndex = 0;
 
     std::atomic<float> inputLeftDb { -100.0f };
     std::atomic<float> inputRightDb { -100.0f };
